@@ -1,0 +1,3 @@
+gcc Zookeeper/consts.c -I/usr/include/zookeeper/ -c -o Zookeeper/consts.o
+hsc2hs Zookeeper/Core.hsc -I/usr/include/zookeeper/ -L"-lzookeeper_mt"
+ghc Zookeeper.Core Zookeeper/consts.o

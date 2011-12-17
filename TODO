@@ -1,0 +1,4 @@
+* implement watch properly
+* move to bytestrings
+* binary serialization
+* implement pubsub
