@@ -14,23 +14,27 @@ import DBTree as T
 import Hash
 import IterateeTrans
 
+import qualified Data.ByteString as B
+
+ident = B.pack $ map (fromIntegral . ord) "Set"
+
 insert ref item = do
-  ref' <- unlabel "Set" ref
-  let h = strHash item
+  ref' <- unlabel ident ref
+  let h = stHash item
   item' <- lift $ createValue item
-  ref'' <- T.insert ref' (map (fromIntegral . ord) h) item'
-  lift $ createLabel "Set" ref''
+  ref'' <- T.insert ref' h item'
+  lift $ createLabel ident ref''
 
 delete ref item = do
-  ref' <- unlabel "Set" ref
-  let h = strHash item
-  ref'' <- T.delete ref' (map (fromIntegral . ord) h)
-  lift $ createLabel "Set" ref''
+  ref' <- unlabel ident ref
+  let h = stHash item
+  ref'' <- T.delete ref' h
+  lift $ createLabel ident ref''
 
 exists ref item = do
-  ref' <- unlabel "Set" ref
-  let h = strHash item
-  ref'' <- T.lookup ref' (map (fromIntegral . ord) h)
+  ref' <- unlabel ident ref
+  let h = stHash item
+  ref'' <- T.lookup ref' h
   if N.null ref'' then
     return False
   else do
@@ -44,7 +48,7 @@ exists ref item = do
       _ ->
         (error . show) ("this shouldn't be here", node)
 
-iterate :: Monad m => Ref -> E.Enumerator String (MaybeT (StoreT Ref Node m)) a
+iterate :: Monad m => Ref -> E.Enumerator B.ByteString (MaybeT (StoreT Ref Node m)) a
 iterate ref i = do
-  ref' <- lift $ unlabel "Set" ref
+  ref' <- lift $ unlabel ident ref
   (T.iterate ref' E.$= (E.mapM (MaybeT . N.getValue))) i

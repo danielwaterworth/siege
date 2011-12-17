@@ -4,6 +4,7 @@ module NetworkProtocol where
 
 import Data.Maybe
 import Data.Char
+import qualified Data.ByteString as B
 import qualified Data.Enumerator as E
 import Data.Map (Map)
 import qualified Data.Map as Map
@@ -22,6 +23,7 @@ import qualified DBMap as M
 import DBOperation
 import DoStore
 import Commands
+import StringHelper
 
 import Network.Socket (Socket)
 import Database.Redis.Redis (Redis)
@@ -49,19 +51,19 @@ maybeRead = fmap fst . listToMaybe . reads
 
 applyReversed fn = reverse . fn . reverse
 
-recvCommand :: NetworkOp [String]
+recvCommand :: NetworkOp [B.ByteString]
 recvCommand = do
   line <- lift $ recvLine
-  if null line || head line /= '*' then do
+  if B.null line || B.head line /= (fromIntegral $ ord '*') then do
     nothing
   else do
-    n <- MaybeT $ return $ ((maybeRead . applyReversed (drop 2) . tail) line :: Maybe Int)
+    n <- MaybeT $ return $ ((maybeRead . applyReversed (drop 2) . tail . bToSt) line :: Maybe Int)
     c <- replicateM n $ do
       line <- lift $ recvLine
-      if null line || head line /= '$' then
+      if B.null line || B.head line /= (fromIntegral $ ord '$') then
         nothing
       else do
-        m <- MaybeT $ return $ ((maybeRead . applyReversed (drop 2) . tail) line :: Maybe Int)
+        m <- MaybeT $ return $ ((maybeRead . applyReversed (drop 2) . tail. bToSt) line :: Maybe Int)
         if m >= 0 then do
           dat <- lift $ recv m
           lift $ recv 2
@@ -100,20 +102,21 @@ constructList act = do
 protocol :: NetworkOp ()
 protocol = flip (>>) (return ()) $ flip runStateT Map.empty $ forever $ do
   c <- lift $ recvCommand
-  let c' = ((map toLower (head c)):(tail c))
-  case c' of
-    ["ping"] ->
+  let com = (map toLower . bToSt . head) c
+  let args = tail c
+  case (com, args) of
+    ("ping", []) ->
       lift $ lift $ sendReply $ StatusReply "PONG"
-    ["show"] -> lift $ do
+    ("show", []) -> lift $ do
       ref <- lift $ lift $ Sh.get
       tree <- lift $ lift $ lift $ pullTree ref
       traceM tree
       lift $ sendReply $ StatusReply "OK"
-    ["discard"] -> do
+    ("discard", []) -> do
       lift $ lift $ sendReply $ ErrorReply "ERR DISCARD without MULTI"
-    ["exec"] ->
+    ("exec", []) ->
       lift $ lift $ sendReply $ ErrorReply "ERR EXEC without MULTI"
-    ("watch":keys) -> do
+    ("watch", keys) -> do
       items <- lift $ performRead (\head -> mapM (\key -> do
         val <- mapLookup head key
         return (key, val)) keys)
@@ -126,21 +129,22 @@ protocol = flip (>>) (return ()) $ flip runStateT Map.empty $ forever $ do
         else
           return ()) items'
       lift $ lift $ sendReply $ StatusReply "OK"
-    ["unwatch"] -> do
+    ("unwatch", []) -> do
       State.put Map.empty
       lift $ lift $ sendReply $ StatusReply "OK"
-    ["multi"] -> do
+    ("multi", []) -> do
       lift $ lift $ sendReply $ StatusReply "OK"
       commands <- lift $ constructList $ do
         c <- recvCommand
-        let c' = (map toLower $ head c):(tail c)
-        case c' of
-          ["discard"] -> do
+        let com = (map toLower . bToSt . head) c
+        let args = tail c
+        case (com, args) of
+          ("discard", []) -> do
             return $ Right $ StatusReply "OK"
-          ["exec"] -> 
+          ("exec", []) -> 
             return $ Left Nothing
           _ -> do
-            let c' = command c in
+            let c' = command com args in
               case c' of
                 Nothing -> do
                   lift $ sendReply $ ErrorReply "unknown command"
@@ -171,7 +175,7 @@ protocol = flip (>>) (return ()) $ flip runStateT Map.empty $ forever $ do
         Right rep -> do
           lift $ lift $ sendReply rep
     _ ->
-      case command c of
+      case command com args of
         Just (Left c') -> lift $ do
           r <- performRead c'
           r' <- MaybeT $ return r

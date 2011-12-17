@@ -2,6 +2,8 @@
 
 module DBOperation where
 
+import qualified Data.ByteString as B
+
 import Control.Monad
 import Control.Monad.Trans
 import Control.Monad.Trans.Maybe
@@ -23,19 +25,19 @@ data DBOperation r a =
 
   GetType r (Maybe NodeType -> DBOperation r a) |
 
-  CreateValue String (r -> DBOperation r a) |
-  GetValue r (Maybe String -> DBOperation r a) |
+  CreateValue B.ByteString (r -> DBOperation r a) |
+  GetValue r (Maybe B.ByteString -> DBOperation r a) |
 
-  MapHas r String (Bool -> DBOperation r a) |
-  MapLookup r String (r -> DBOperation r a) |
-  MapInsert r String r (r -> DBOperation r a) |
-  MapDelete r String (r -> DBOperation r a) |
-  forall x. MapItems r (E.Iteratee (String, r) (DBOperation r) x) (x -> DBOperation r a) |
+  MapHas r B.ByteString (Bool -> DBOperation r a) |
+  MapLookup r B.ByteString (r -> DBOperation r a) |
+  MapInsert r B.ByteString r (r -> DBOperation r a) |
+  MapDelete r B.ByteString (r -> DBOperation r a) |
+  forall x. MapItems r (E.Iteratee (B.ByteString, r) (DBOperation r) x) (x -> DBOperation r a) |
 
-  SetHas r String (Bool -> DBOperation r a) |
-  SetInsert r String (r -> DBOperation r a) |
-  SetDelete r String (r -> DBOperation r a) |
-  forall x. SetItems r (E.Iteratee String (DBOperation r) x) (x -> DBOperation r a)
+  SetHas r B.ByteString (Bool -> DBOperation r a) |
+  SetInsert r B.ByteString (r -> DBOperation r a) |
+  SetDelete r B.ByteString (r -> DBOperation r a) |
+  forall x. SetItems r (E.Iteratee B.ByteString (DBOperation r) x) (x -> DBOperation r a)
 
 getType = flip GetType return
 
@@ -86,9 +88,12 @@ convert (GetType r c) =
     case o of
       (N.Value _) -> convert $ c $ Just Value
       (N.Label l _) ->
-        case l of
-          "Map" -> convert $ c $ Just Map
-          "Set" -> convert $ c $ Just Set
+        if l == Map.ident then
+          convert $ c $ Just Map
+        else if l == Set.ident then
+          convert $ c $ Just Set
+        else
+          undefined
 
 convert (CreateValue v c) = do
   o <- lift $ N.createValue v

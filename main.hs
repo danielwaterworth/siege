@@ -68,6 +68,7 @@ import Control.Monad
 import NetworkProtocol
 import Connection
 import NetworkHelper
+import StringHelper
 
 main = do
   print "starting..."
@@ -76,7 +77,7 @@ main = do
   exists <- Z.exists zk "/head" Nothing
   if isNothing exists then do
     (acl, _) <- Z.getAcl zk "/"
-    Z.create zk "/head" N.empty [] acl
+    Z.create zk "/head" (bToSt N.empty) [] acl
     return ()
   else
     return ()
@@ -90,7 +91,7 @@ main = do
   var <- newFVar N.empty
   forkIO $ forever $ flushFVar (\head -> do
     print ("new head", head)
-    Z.set zk "/head" head Nothing
+    Z.set zk "/head" (bToSt head) Nothing
     return ()) var
   listenAt 4050 (\sock -> do
     print "new socket [="

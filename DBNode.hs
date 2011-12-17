@@ -4,26 +4,27 @@ import Store
 import Control.Monad.Trans
 import Control.Monad.Trans.Maybe
 import Data.Word
+import qualified Data.ByteString as B
 
 nothing :: Monad m => MaybeT m a
 nothing = MaybeT $ return $ Nothing
 
-type Ref = String
+type Ref = B.ByteString
 
 data Node =
   Branch [(Word8, Ref)] |
-  Shortcut [Word8] Ref |
+  Shortcut B.ByteString Ref |
   --SequenceNode Int Ref Ref |
-  Value String |
-  Label String Ref |
+  Value B.ByteString |
+  Label B.ByteString Ref |
   Array [Ref] deriving (Read, Show)
 
 data Tree =
   Empty |
   TreeBranch [(Word8, Tree)] |
-  TreeShortcut [Word8] Tree |
-  TreeValue String |
-  TreeLabel String Tree |
+  TreeShortcut B.ByteString Tree |
+  TreeValue B.ByteString |
+  TreeLabel B.ByteString Tree |
   TreeArray [Tree] deriving (Show)
 
 pullTree :: Monad m => Ref -> StoreT Ref Node m Tree
@@ -51,19 +52,19 @@ pullTree ref =
         return $ TreeArray trees
 
 validRef :: Ref -> Bool
-validRef = (== 20) . length
+validRef = (== 20) . B.length
 
 empty :: Ref
-empty = take 20 $ repeat '\x00'
+empty = B.pack $ take 20 $ repeat 0
 
 null :: Ref -> Bool
 null = (== empty)
 
-createValue :: Monad m => String -> StoreT Ref Node m Ref
+createValue :: Monad m => B.ByteString -> StoreT Ref Node m Ref
 createValue dat =
   store $ Value dat
 
-getValue :: Monad m => Ref -> StoreT Ref Node m (Maybe String)
+getValue :: Monad m => Ref -> StoreT Ref Node m (Maybe B.ByteString)
 getValue ref =
   if DBNode.null ref then
     return Nothing
@@ -73,11 +74,11 @@ getValue ref =
       Value st -> return $ Just st
       _ -> return Nothing
 
-createLabel :: Monad m => String -> Ref -> StoreT Ref Node m Ref
+createLabel :: Monad m => B.ByteString -> Ref -> StoreT Ref Node m Ref
 createLabel label ref =
   store $ Label label ref
 
-unlabel :: Monad m => String -> Ref -> MaybeT (StoreT Ref Node m) Ref
+unlabel :: Monad m => B.ByteString -> Ref -> MaybeT (StoreT Ref Node m) Ref
 unlabel label ref =
   if DBNode.null ref then
     return ref
@@ -91,7 +92,7 @@ unlabel label ref =
           nothing
       _ -> nothing
 
-getLabel :: Monad m => Ref -> MaybeT (StoreT Ref Node m) (String, Ref)
+getLabel :: Monad m => Ref -> MaybeT (StoreT Ref Node m) (B.ByteString, Ref)
 getLabel ref = do
   if DBNode.null ref then 
     nothing

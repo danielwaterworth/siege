@@ -2,16 +2,20 @@
 
 module Connection where
 
+import Data.Char
+import qualified Data.ByteString as B
+
 import Control.Monad
 import Control.Concurrent
 import Control.Monad.Trans
 import Network.Socket hiding (recv, send)
-import qualified Network.Socket as S
+import qualified Network.Socket.ByteString as S
 
+-- should be using iteratees
 data Step m a =
   Done a |
-  Send String (ConnectionT m a) |
-  Recv Int (String -> ConnectionT m a)
+  Send B.ByteString (ConnectionT m a) |
+  Recv Int (B.ByteString -> ConnectionT m a)
 
 data ConnectionT m a = ConnectionT {
   runConnectionT :: m (Step m a)
@@ -36,32 +40,34 @@ instance MonadIO m => MonadIO (ConnectionT m) where
     v <- liftIO m
     (return . Done) v
 
-send :: Monad m => String -> ConnectionT m ()
+send :: Monad m => B.ByteString -> ConnectionT m ()
 send = ConnectionT . return . flip Send (return ())
 
-recv :: Monad m => Int -> ConnectionT m String
+recv :: Monad m => Int -> ConnectionT m B.ByteString
 recv = ConnectionT . return . flip Recv return
 
-recvLine :: Monad m => ConnectionT m String
+recvLine :: Monad m => ConnectionT m B.ByteString
 recvLine = do
   st <- recv 1
-  if st == "\r" then do
+  let st' = map (chr . fromIntegral) $ B.unpack st
+  if st' == "\r" then do
     line <- gotcr
-    return $ st ++ line
+    return $ B.append st line
   else do
     line <- recvLine
-    return $ st ++ line
+    return $ B.append st line
  where
   gotcr = do
     st <- recv 1
-    if st == "\n" then
+    let st' = map (chr . fromIntegral) $ B.unpack st
+    if st' == "\n" then
       return st
-    else if st == "\r" then do
+    else if st' == "\r" then do
       line <- gotcr
-      return $ st ++ line
+      return $ B.append st line
     else do
       line <- recvLine
-      return $ st ++ line
+      return $ B.append st line
 
 monadChange :: (Monad m0, Monad m1) => (forall x. m0 x -> m1 x) -> ConnectionT m0 a -> ConnectionT m1 a
 monadChange fn op = ConnectionT $ do

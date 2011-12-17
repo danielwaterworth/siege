@@ -8,6 +8,8 @@ import Data.Char
 
 hash = bytestringDigest . sha1
 
+stHash = B.concat . L.toChunks . hash . L.fromChunks . (\i -> [i])
+
 lbToStr = (map (chr . fromIntegral)) . L.unpack
 strToLB = L.pack . (map (fromIntegral . ord))
 
