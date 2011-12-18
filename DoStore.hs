@@ -12,7 +12,10 @@ import Store
 import Database.Redis.Redis as R
 import Hash
 import qualified DBNode as N
+import DBNodeBinary
+import Data.Binary as Bin
 import System.Random
+import StringHelper
 
 randRef :: IO N.Ref
 randRef = do
@@ -45,7 +48,7 @@ withRedis redisfn op =
             v <- redisfn (\redis -> R.get redis k')
             case v of
               RBulk (Just v') ->
-                return $ read v'
+                return $ (Bin.decode . stToL) v'
               _ ->
                 error $ show ("lookup error", k, v)
         withRedis' (M.insert k' v m) redisfn $ c v
@@ -53,7 +56,7 @@ withRedis redisfn op =
         k <- randRef
         let k' = refLocation k
         out <- withRedis' (M.insert k' v m) redisfn $ c k
-        let v' = show v
+        let v' = (lToSt . Bin.encode) v
         redisfn (\redis -> do
           R.multi redis
           mapM_ (\ref -> R.sadd redis (invertLocation ref) k') (N.traverse v)

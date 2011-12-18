@@ -1,4 +1,3 @@
 * write iteratee base recvLine
 * implement watch properly
-* binary serialization
 * implement pubsub

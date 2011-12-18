@@ -7,8 +7,8 @@ import Data.Binary.Get
 
 instance Binary Ref where
   put r@(Ref v) = 
-    if validRef r then
-      error "invalid reference"
+    if not $ validRef r then
+      error $ show ("invalid reference", r)
     else
       putByteString v
   get = do
