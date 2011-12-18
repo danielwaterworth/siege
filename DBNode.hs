@@ -11,7 +11,7 @@ nothing = MaybeT $ return $ Nothing
 
 newtype Ref = Ref {
   unRef :: B.ByteString
-} deriving (Read, Show, Eq)
+} deriving (Read, Show, Eq, Ord)
 
 data Node =
   Branch [(Word8, Ref)] |

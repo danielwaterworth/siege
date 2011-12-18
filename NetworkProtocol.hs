@@ -1,4 +1,4 @@
-{-# LANGUAGE ExistentialQuantification, Rank2Types #-}
+{-# LANGUAGE ExistentialQuantification, Rank2Types, ImpredicativeTypes #-}
 
 module NetworkProtocol where
 
@@ -34,11 +34,11 @@ import TraceHelper
 
 type NetworkOp a = MaybeT (ConnectionT (SharedStateT Ref (StoreT Ref Node Identity))) a
 
-convert :: NetworkOp a -> Socket -> FVar Ref -> (forall x. (Redis -> IO x) -> IO x) -> IO ()
+convert :: NetworkOp a -> Socket -> FVar Ref -> [(forall x. (Redis -> IO x) -> IO x)] -> IO ()
 convert op sock var redis =
   let stage1 = (withSocket sock) . C.monadChange stage2
       stage2 = withFVar var . Sh.monadChange stage3
-      stage3 = withRedis redis . St.monadChange stage4
+      stage3 = withRedis redis . cache . St.monadChange stage4
       stage4 = return . runIdentity in
         stage1 $ do
           runMaybeT op

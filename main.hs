@@ -95,7 +95,7 @@ main = do
     return ()) var
   listenAt 4050 (\sock -> do
     print "new socket [="
-    convert protocol sock var withRedis)
+    convert protocol sock var [withRedis])
 
 --  redis <- connect localhost defaultPort
 --  ping redis
