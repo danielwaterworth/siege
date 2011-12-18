@@ -110,6 +110,27 @@ recvLine = do
       line <- recvLine
       return $ B.append st line
 
+--subString :: L.ByteString -> L.ByteString -> Maybe (L.ByteString, L.ByteString)
+
+--subString p s =
+--  L.elemIndices ((fromIntegral . ord) "\r") l
+--  L.elemIndices ((fromIntegral . ord) "\n") l
+
+--recvLine :: Monad m => ConnectionT m B.ByteString
+--recvLine = do
+--  liftM B.concat recvLine'
+-- where
+--  recvLine' :: Monad m => [B.ByteString] -> ConnectionT m [B.ByteString]
+--  recvLine' d = recvI $ do
+--    dat <- E.continue return
+--    case dat of
+--      E.EOF c ->
+--        error "lack of input"
+--      E.Chunks c ->
+--        let l = L.fromChunks $ d ++ c
+--        subString (stToB "\r\n") l
+--        undefined
+
 monadChange :: (Monad m0, Monad m1) => (forall x. m0 x -> m1 x) -> ConnectionT m0 a -> ConnectionT m1 a
 monadChange fn op = ConnectionT $ do
   v <- fn $ runConnectionT op

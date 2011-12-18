@@ -4,7 +4,6 @@ import Store
 import Control.Monad.Trans
 import Control.Monad.Trans.Maybe
 import Data.Word
-import qualified Data.Binary as Bin
 import qualified Data.ByteString as B
 
 nothing :: Monad m => MaybeT m a
