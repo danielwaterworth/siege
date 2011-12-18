@@ -17,9 +17,10 @@ import Connection as C
 import SharedState as Sh
 import Store (StoreT)
 import qualified Store as St
-import DBNode (Ref, Node, pullTree)
+import DBNode (Ref, Node)
 import qualified DBNode as N
 import qualified DBMap as M
+import ShowTree
 import DBOperation
 import DoStore
 import Commands

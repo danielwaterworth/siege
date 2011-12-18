@@ -77,7 +77,7 @@ main = do
   exists <- Z.exists zk "/head" Nothing
   if isNothing exists then do
     (acl, _) <- Z.getAcl zk "/"
-    Z.create zk "/head" (bToSt N.empty) [] acl
+    Z.create zk "/head" (bToSt $ N.unRef N.empty) [] acl
     return ()
   else
     return ()
@@ -91,7 +91,7 @@ main = do
   var <- newFVar N.empty
   forkIO $ forever $ flushFVar (\head -> do
     print ("new head", head)
-    Z.set zk "/head" (bToSt head) Nothing
+    Z.set zk "/head" (bToSt $ N.unRef head) Nothing
     return ()) var
   listenAt 4050 (\sock -> do
     print "new socket [="
