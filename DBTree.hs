@@ -1,16 +1,25 @@
+{-# LANGUAGE ScopedTypeVariables #-}
+
 module DBTree where
 
+import Data.Maybe
 import Data.Word
 import qualified Data.ByteString as B
 import Data.List
 import qualified Data.Enumerator as E
+
+import Data.Set (Set)
+import qualified Data.Set as S
+import Data.Map (Map)
+import qualified Data.Map as M
 
 import Control.Monad
 import Control.Monad.Trans
 import Control.Monad.Trans.Maybe
 import Store
 
-import DBNode as N
+import DBNode (Ref, Node(..), nothing)
+import qualified DBNode as N
 
 lookup :: Monad m => Ref -> B.ByteString -> MaybeT (StoreT Ref Node m) Ref
 lookup ref h =
@@ -51,7 +60,7 @@ insert ref h item =
               let options'' = (B.head h, ref):options'
               lift $ store $ Branch options''
             Nothing -> do
-              ref <- DBTree.insert empty (B.tail h) item
+              ref <- DBTree.insert N.empty (B.tail h) item
               let options' = (B.head h, ref):options
               lift $ store $ Branch options'
       Shortcut path item' -> do
@@ -135,3 +144,79 @@ iterate =
             E.Continue c -> (c . E.Chunks) [item]
             _ -> E.returnI s
         _ -> lift $ nothing
+
+type Endo v = v -> v
+type MergeFn m v = v -> v -> v -> m (Maybe v)
+
+trivialMerge :: (Monad m, Eq v) => MergeFn m v
+trivialMerge a b c = return $ 
+  if a == b || c == b then
+    Just c
+  else if a == c then
+    Just b
+  else
+    Nothing
+
+mergeLists :: (Ord k, Monad m) => MergeFn m (Maybe v) -> MergeFn m [(k, v)]
+mergeLists fn a b c = do
+  let keys = S.toList $ S.fromList (map fst a) `S.union` S.fromList (map fst b) `S.union` S.fromList (map fst c)
+  let a' = M.fromList a
+  let b' = M.fromList b
+  let c' = M.fromList c
+  out <- mapM (\key -> do
+    let a'' = M.lookup key a'
+    let b'' = M.lookup key b'
+    let c'' = M.lookup key c'
+    v <- fn a'' b'' c''
+    return $ fmap (\v' -> (key, v')) v) keys
+  return $ fmap (catMaybes . map (\(k, v) -> fmap (\v' -> (k, v')) v)) $ sequence out
+
+merge :: Monad m => MergeFn (MaybeT (StoreT Ref Node m)) (Maybe Ref) -> MergeFn (MaybeT (StoreT Ref Node m)) Ref
+merge fn a b c = do
+  out <- merge' 20 fn (Just a) (Just b) (Just c)
+  case out of
+    Nothing -> return Nothing
+    Just Nothing -> return $ Just N.empty
+    Just (Just v) -> return $ Just v
+ where
+  merge' :: Monad m => Int -> Endo (MergeFn (MaybeT (StoreT Ref Node m)) (Maybe Ref))
+  merge' n fn a b c = do
+    o <- trivialMerge a b c
+    case o of
+      Just v ->
+        return o
+      Nothing ->
+        if n == 0 then
+          fn a b c
+        else do
+          a' <- case a of
+            Just a' -> do
+              (Branch a'') <- lift $ get a'
+              return a''
+            Nothing ->
+              return []
+          b' <- case b of
+            Just b' -> do
+              (Branch b'') <- lift $ get b'
+              return b''
+            Nothing ->
+              return []
+          c' <- case a of
+            Just c' -> do
+              (Branch c'') <- lift $ get c'
+              return c''
+            Nothing ->
+              return []
+          options <- mergeLists (merge' (n-1) fn) a' b' c'
+          case options of
+            Just options' ->
+              if null options' then
+                return $ Just Nothing
+              else do
+                r <- lift $ store $ Branch options'
+                return $ Just $ Just r
+            Nothing ->
+              return Nothing
+  getOptions :: Monad m => Ref -> (MaybeT (StoreT Ref Node m)) [(Word8, Ref)]
+  getOptions r = do
+    undefined
