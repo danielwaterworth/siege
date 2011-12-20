@@ -15,13 +15,13 @@ import qualified Data.Map as M
 
 import Control.Monad
 import Control.Monad.Trans
-import Control.Monad.Trans.Maybe
+import Control.Monad.Trans.Error
 import Store
 
-import DBNode (Ref, Node(..), nothing)
+import DBNode (Ref, Node(..), RawDBOperation, DBError(..))
 import qualified DBNode as N
 
-lookup :: Monad m => Ref -> B.ByteString -> MaybeT (StoreT Ref Node m) Ref
+lookup :: Monad m => Ref -> B.ByteString -> RawDBOperation m Ref
 lookup ref h =
   if B.null h then
     return ref
@@ -40,9 +40,10 @@ lookup ref h =
           return item'
         else
           return N.empty
-      _ -> nothing
+      _ ->
+        throwError TypeError
 
-insert :: Monad m => Ref -> B.ByteString -> Ref -> MaybeT (StoreT Ref Node m) Ref
+insert :: Monad m => Ref -> B.ByteString -> Ref -> RawDBOperation m Ref
 insert ref h item =
   if B.null h then
     return item
@@ -76,10 +77,11 @@ insert ref h item =
                   b <- DBTree.insert N.empty (B.tail bh) bi
                   lift $ store $ Branch [(B.head ah, a), (B.head bh, b)] in
                     construct path item' h item
-      _ -> nothing
+      _ ->
+        throwError TypeError
 
 -- TODO: collapse a branch and a shortcut to a single shortcut
-delete :: Monad m => Ref -> B.ByteString -> MaybeT (StoreT Ref Node m) Ref
+delete :: Monad m => Ref -> B.ByteString -> RawDBOperation m Ref
 delete ref h =
   if B.null h then
     return N.empty
@@ -106,7 +108,8 @@ delete ref h =
           return N.empty
         else
           return ref
-      _ -> nothing
+      _ ->
+        throwError TypeError
  where
   createBranch options = do
     if Prelude.null options then
@@ -123,7 +126,7 @@ delete ref h =
     else
       lift $ store $ Branch options
 
-iterate :: Monad m => Ref -> E.Enumerator Ref (MaybeT (StoreT Ref Node m)) a
+iterate :: Monad m => Ref -> E.Enumerator Ref (RawDBOperation m) a
 iterate =
   iterate' 20
  where
@@ -143,7 +146,8 @@ iterate =
           case s of
             E.Continue c -> (c . E.Chunks) [item]
             _ -> E.returnI s
-        _ -> lift $ nothing
+        _ ->
+          lift $ throwError TypeError
 
 type Endo v = v -> v
 type MergeFn m v = v -> v -> v -> m (Maybe v)
@@ -171,7 +175,7 @@ mergeLists fn a b c = do
     return $ fmap (\v' -> (key, v')) v) keys
   return $ fmap (catMaybes . map (\(k, v) -> fmap (\v' -> (k, v')) v)) $ sequence out
 
-merge :: Monad m => MergeFn (MaybeT (StoreT Ref Node m)) (Maybe Ref) -> MergeFn (MaybeT (StoreT Ref Node m)) Ref
+merge :: Monad m => MergeFn (RawDBOperation m) (Maybe Ref) -> MergeFn (RawDBOperation m) Ref
 merge fn a b c = do
   out <- merge' 20 fn (Just a) (Just b) (Just c)
   case out of
@@ -179,7 +183,7 @@ merge fn a b c = do
     Just Nothing -> return $ Just N.empty
     Just (Just v) -> return $ Just v
  where
-  merge' :: Monad m => Int -> Endo (MergeFn (MaybeT (StoreT Ref Node m)) (Maybe Ref))
+  merge' :: Monad m => Int -> Endo (MergeFn (RawDBOperation m) (Maybe Ref))
   merge' n fn a b c = do
     o <- trivialMerge a b c
     case o of
@@ -217,6 +221,6 @@ merge fn a b c = do
                 return $ Just $ Just r
             Nothing ->
               return Nothing
-  getOptions :: Monad m => Ref -> (MaybeT (StoreT Ref Node m)) [(Word8, Ref)]
+  getOptions :: Monad m => Ref -> (RawDBOperation m) [(Word8, Ref)]
   getOptions r = do
     undefined

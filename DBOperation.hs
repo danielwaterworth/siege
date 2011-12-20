@@ -6,11 +6,10 @@ import qualified Data.ByteString as B
 
 import Control.Monad
 import Control.Monad.Trans
-import Control.Monad.Trans.Maybe
 import qualified DBMap as Map
 import qualified DBSet as Set
 import qualified Store as S
-import DBNode (Ref, Node)
+import DBNode (Ref, Node, RawDBOperation)
 import qualified DBNode as N
 import qualified Data.Enumerator as E
 import IterateeTrans
@@ -77,7 +76,7 @@ instance Monad (DBOperation r) where
       SetDelete r k c -> SetDelete r k (\i -> c i >>= f)
       SetItems r i c -> SetItems r i (\i -> c i >>= f)
 
-convert :: Monad m => DBOperation Ref a -> MaybeT (S.StoreT Ref Node m) a
+convert :: Monad m => DBOperation Ref a -> RawDBOperation m a
 convert (Done x) = return x
 
 convert (GetType r c) =
@@ -96,11 +95,11 @@ convert (GetType r c) =
           undefined
 
 convert (CreateValue v c) = do
-  o <- lift $ N.createValue v
+  o <- N.createValue v
   convert $ c o
 convert (GetValue r c) = do
-  o <- lift $ N.getValue r
-  convert $ c o
+  o <- N.getValue r
+  convert $ c $ Just o
 
 convert (MapHas r k c) = do
   v <- Map.lookup r k

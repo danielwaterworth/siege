@@ -11,7 +11,7 @@ import qualified Data.Map as Map
 import Control.Monad
 import Control.Monad.Identity
 import Control.Monad.Trans
-import Control.Monad.Trans.Maybe
+import Control.Monad.Trans.Error
 import Control.Monad.Trans.State as State
 import Connection as C
 import SharedState as Sh
@@ -75,13 +75,13 @@ recvCommand = do
           nothing
     MaybeT $ return $ sequence c
 
-performAlter :: (Ref -> DBOperation Ref (a, Ref)) -> NetworkOp (Maybe a)
+performAlter :: (Ref -> DBOperation Ref (a, Ref)) -> NetworkOp (Either a DBError)
 performAlter op =
   lift $ lift $ alter $ (\head -> do
-    v <- runMaybeT $ DBOperation.convert $ op head
+    v <- runErrorT $ DBOperation.convert $ op head
     case v of
-      Just (a, r) -> return (r, Just a)
-      Nothing -> return (head, Nothing))
+      Right (a, r) -> return (r, Right a)
+      Left e -> return (head, Left e))
 
 performRead :: (Ref -> DBOperation Ref a) -> NetworkOp (Maybe a)
 performRead op = do
