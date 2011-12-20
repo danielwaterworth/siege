@@ -185,5 +185,6 @@ protocol = flip (>>) (return ()) $ flip runStateT Map.empty $ forever $ do
           r <- performAlter c'
           r' <- MaybeT $ return r
           lift $ sendReply r'
-        Nothing ->
+        Nothing -> do
+          lift $ lift $ sendReply $ ErrorReply "unknown command"
           lift $ nothing
