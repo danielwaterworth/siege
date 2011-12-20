@@ -4,6 +4,9 @@ import DBNode
 import Data.Binary
 import Data.Binary.Put
 import Data.Binary.Get
+import qualified Data.ByteString as B
+import qualified Data.ByteString.Lazy as L
+import Control.Monad
 
 instance Binary Ref where
   put r@(Ref v) = 
@@ -15,21 +18,24 @@ instance Binary Ref where
     v <- getBytes 20
     return $ Ref v
 
+getRemaining :: Get B.ByteString
+getRemaining = liftM (B.concat . L.toChunks) getRemainingLazyByteString
+
 instance Binary Node where
   put (Branch options) = do
     put 'b'
     put options
   put (Shortcut k r) = do
     put 's'
-    put k
     put r
+    putByteString k
   put (Value v) = do
     put 'v'
-    put v
+    putByteString v
   put (Label l r) = do
     put 'l'
-    put l
     put r
+    putByteString l
   put (Array items) = do
     put 'a'
     put items
@@ -40,15 +46,15 @@ instance Binary Node where
         options <- get
         return $ Branch options
       's' -> do
-        k <- get
         r <- get
+        k <- getRemaining
         return $ Shortcut k r
       'v' -> do
-        v <- get
+        v <- getRemaining
         return $ Value v
       'l' -> do
-        l <- get
         r <- get
+        l <- getRemaining
         return $ Label l r
       'a' -> do
         items <- get
