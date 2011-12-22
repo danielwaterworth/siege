@@ -1,3 +1,5 @@
+-- REFACTOR ME
+
 --ghc --make -rtsopts -threaded main.hs -O2
 
 --import Reactor
@@ -55,6 +57,9 @@
 --    L.cons ref empty
 --  print k
 
+import Prelude hiding (null)
+import Nullable
+
 import Data.Maybe
 import Zookeeper.Core as Z
 import Database.Redis.Redis
@@ -69,6 +74,8 @@ import NetworkProtocol
 import Connection
 import NetworkHelper
 import StringHelper
+import Store
+import DoStore
 
 main = do
   print "starting..."
@@ -77,25 +84,25 @@ main = do
   exists <- Z.exists zk "/head" Nothing
   if isNothing exists then do
     (acl, _) <- Z.getAcl zk "/"
-    Z.create zk "/head" (bToSt $ N.unRef N.empty) [] acl
+    Z.create zk "/head" (bToSt $ N.unRef empty) [] acl
     return ()
   else
     return ()
   redis <- connect localhost defaultPort
   redisvar <- newMVar redis
-  let withRedis = (\fn -> do
+  let redis = (\fn -> do
         redis <- takeMVar redisvar
         out <- fn redis
         putMVar redisvar redis
         return out)
-  var <- newFVar N.empty
+  var <- newFVar empty
   forkIO $ forever $ flushFVar (\head -> do
     print ("new head", head)
     Z.set zk "/head" (bToSt $ N.unRef head) Nothing
     return ()) var
   listenAt 4050 (\sock -> do
     print "new socket [="
-    convert protocol sock var [withRedis])
+    convert protocol sock var (withRedis [redis] . cache))
 
 --  redis <- connect localhost defaultPort
 --  ping redis

@@ -19,7 +19,8 @@ import TraceHelper
 data Step m a =
   Done a |
   Send B.ByteString (ConnectionT m a) |
-  forall x. Recv (E.Iteratee B.ByteString m x) (x -> ConnectionT m a)
+  forall x. Recv (E.Iteratee B.ByteString m x) (x -> ConnectionT m a) |
+  Close
 
 data ConnectionT m a = ConnectionT {
   runConnectionT :: m (Step m a)
@@ -33,8 +34,9 @@ instance Monad m => Monad (ConnectionT m) where
       Done x -> (runConnectionT . f) x
       Send s c -> return $ Send s (c >>= f)
       Recv i c -> return $ Recv i ((flip (>>=) f) . c)
+      Close -> return $ Close
 
-instance MonadTrans (ConnectionT) where
+instance MonadTrans ConnectionT where
   lift m = ConnectionT $ do
     v <- m
     (return . Done) v
@@ -49,6 +51,9 @@ send = ConnectionT . return . flip Send (return ())
 
 recvI :: Monad m => E.Iteratee B.ByteString m x -> ConnectionT m x
 recvI = ConnectionT . return . flip Recv return
+
+close :: Monad m => ConnectionT m a
+close = ConnectionT $ return $ Close
 
 retry :: Monad m => m (Maybe a) -> m a
 retry m = do
@@ -146,13 +151,16 @@ withSocket sock op =
   withSocket' input sock op = do
     v <- runConnectionT op
     case v of
-      Done a -> return a
+      Done x ->
+        return x
       Send dat c -> do
         S.send sock dat
         withSocket' input sock c
       Recv i c -> do
         (x, dat) <- doRecv input sock i
         withSocket' dat sock $ c x
+      Close -> do
+        sClose sock
   doRecv dat s i = do
     v <- E.runIteratee $ E.enumList 1 dat E.$$ i
     case v of

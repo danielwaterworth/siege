@@ -2,6 +2,8 @@
 
 module Store where
 
+import Data.Map (Map)
+import qualified Data.Map as M
 import Control.Monad.Trans
 import Database.Redis.Redis as R
 import Hash
@@ -64,3 +66,22 @@ monadChange fn op = StoreT $ do
     Done a -> return $ Done a
     Get k c -> return $ Get k $ monadChange fn . c
     Store v c -> return $ Store v $ monadChange fn . c
+
+cache :: (Ord k, Monad m) => StoreT k v m a -> StoreT k v m a
+cache op = do
+  cache' M.empty op
+ where
+  cache' m op = do
+    step <- lift $ runStoreT op
+    case step of 
+      Done a -> return a
+      Get k c -> do
+        case M.lookup k m of
+          Just v ->
+            cache' m $ c v
+          Nothing -> do
+            v <- Store.get k
+            cache' (M.insert k v m) $ c v
+      Store v c -> do
+        k <- Store.store v
+        cache' (M.insert k v m) $ c k

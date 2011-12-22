@@ -1,5 +1,8 @@
 module DBSet where
 
+import Prelude hiding (null)
+import Nullable
+
 import Store
 
 import qualified Data.Enumerator as E
@@ -36,7 +39,7 @@ exists ref item = do
   ref' <- unlabel ident ref
   let h = stHash item
   ref'' <- T.lookup ref' h
-  if N.null ref'' then
+  if null ref'' then
     return False
   else do
     node <- lift $ get ref''
@@ -47,9 +50,9 @@ exists ref item = do
         else
           (error . show) ("wooh, key collision ", item, item')
       _ ->
-        (error . show) ("this shouldn't be here", node)
+        (error . show) ("this shouldn't be here")
 
-iterate :: Monad m => Ref -> E.Enumerator B.ByteString (RawDBOperation m) a
+iterate :: (Monad m, Nullable r) => r -> E.Enumerator B.ByteString (RawDBOperation r m) a
 iterate ref i = do
   ref' <- lift $ unlabel ident ref
   (T.iterate ref' E.$= (EL.mapM N.getValue)) i

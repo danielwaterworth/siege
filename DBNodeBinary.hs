@@ -21,7 +21,7 @@ instance Binary Ref where
 getRemaining :: Get B.ByteString
 getRemaining = liftM (B.concat . L.toChunks) getRemainingLazyByteString
 
-instance Binary Node where
+instance Binary r => Binary (Node r) where
   put (Branch options) = do
     put 'b'
     put options

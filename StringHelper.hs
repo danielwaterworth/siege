@@ -11,7 +11,13 @@ bToSt :: B.ByteString -> String
 bToSt = map (chr . fromIntegral) . B.unpack
 
 stToL :: String -> L.ByteString
-stToL = L.fromChunks . (\i -> [i]) . stToB
+stToL = bToL . stToB
 
 lToSt :: L.ByteString -> String
-lToSt = bToSt . B.concat . L.toChunks
+lToSt = bToSt . lToB
+
+bToL :: B.ByteString -> L.ByteString
+bToL = L.fromChunks . (\i -> [i])
+
+lToB :: L.ByteString -> B.ByteString
+lToB = B.concat . L.toChunks

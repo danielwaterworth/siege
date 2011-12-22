@@ -2,6 +2,9 @@
 
 module DBOperation where
 
+import Prelude hiding (null)
+import Nullable
+
 import qualified Data.ByteString as B
 
 import Control.Monad
@@ -76,11 +79,11 @@ instance Monad (DBOperation r) where
       SetDelete r k c -> SetDelete r k (\i -> c i >>= f)
       SetItems r i c -> SetItems r i (\i -> c i >>= f)
 
-convert :: Monad m => DBOperation Ref a -> RawDBOperation m a
+convert :: (Monad m, Nullable r) => DBOperation r a -> RawDBOperation r m a
 convert (Done x) = return x
 
 convert (GetType r c) =
-  if N.null r then
+  if null r then
     convert $ c $ Nothing
   else do
     o <- lift $ S.get r
@@ -103,7 +106,7 @@ convert (GetValue r c) = do
 
 convert (MapHas r k c) = do
   v <- Map.lookup r k
-  convert $ c $ not $ N.null v
+  convert $ c $ not $ null v
 convert (MapLookup r k c) = do
   v <- Map.lookup r k
   convert $ c v

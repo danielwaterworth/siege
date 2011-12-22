@@ -1,5 +1,8 @@
 module DBMap where
 
+import Prelude hiding (null)
+import Nullable
+
 import Store
 
 import qualified Data.Enumerator as E
@@ -19,7 +22,7 @@ import IterateeTrans
 
 ident = B.pack $ map (fromIntegral . ord) "Map"
 
-insert :: Monad m => Ref -> B.ByteString -> Ref -> RawDBOperation m Ref
+insert :: (Monad m, Nullable r) => r -> B.ByteString -> r -> RawDBOperation r m r
 insert ref key item = do
   ref' <- N.unlabel ident ref
   let h = stHash key
@@ -27,13 +30,13 @@ insert ref key item = do
   ref'' <- T.insert ref' h item'
   N.createLabel ident ref''
 
-lookup :: Monad m => Ref -> B.ByteString -> RawDBOperation m Ref
+lookup :: (Monad m, Nullable r) => r -> B.ByteString -> RawDBOperation r m r
 lookup ref key = do
   ref' <- N.unlabel ident ref
   let h = stHash key
   ref'' <- T.lookup ref' h
-  if N.null ref'' then
-    return N.empty
+  if null ref'' then
+    return empty
   else do
     node <- lift $ get ref''
     case node of
@@ -43,19 +46,19 @@ lookup ref key = do
         else
           (error . show) ("wooh, key collision ", key, key')
       _ ->
-        (error . show) ("this shouldn't be here", node)
+        (error . show) ("this shouldn't be here")
 
-delete :: Monad m => Ref -> B.ByteString -> RawDBOperation m Ref
+delete :: (Monad m, Nullable r) => r -> B.ByteString -> RawDBOperation r m r
 delete ref key = do
   ref' <- N.unlabel ident ref
   let h = stHash key
   ref'' <- T.delete ref' h
-  if N.null ref'' then
-    return N.empty
+  if null ref'' then
+    return empty
   else
     N.createLabel ident ref''
 
-iterate :: Monad m => Ref -> E.Enumerator (B.ByteString, Ref) (RawDBOperation m) a
+iterate :: (Monad m, Nullable r) => r -> E.Enumerator (B.ByteString, r) (RawDBOperation r m) a
 iterate ref i = do
   ref' <- lift $ N.unlabel ident ref
   (T.iterate ref' E.$= (EL.mapM N.getLabel)) i

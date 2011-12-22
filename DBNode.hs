@@ -1,22 +1,29 @@
 module DBNode where
 
+import Prelude hiding (null)
+
 import Store
 import Control.Monad.Trans
 import Control.Monad.Trans.Error
 import Data.Word
 import qualified Data.ByteString as B
+import Nullable
 
 newtype Ref = Ref {
   unRef :: B.ByteString
 } deriving (Read, Show, Eq, Ord)
 
-data Node =
-  Branch [(Word8, Ref)] |
-  Shortcut B.ByteString Ref |
-  --SequenceNode Int Ref Ref |
+instance Nullable Ref where
+  empty = Ref . B.pack $ take 20 $ repeat 0
+  null = (== empty)
+
+data Node r =
+  Branch [(Word8, r)] |
+  Shortcut B.ByteString r |
+  --SequenceNode Int r r |
   Value B.ByteString |
-  Label B.ByteString Ref |
-  Array [Ref] deriving (Read, Show)
+  Label B.ByteString r |
+  Array [r] deriving (Read, Show, Eq)
 
 data DBError =
   TypeError |
@@ -26,24 +33,18 @@ data DBError =
 instance Error DBError where
   noMsg = OtherError
 
-type RawDBOperation m = ErrorT DBError (StoreT Ref Node m)
+type RawDBOperation r m = ErrorT DBError (StoreT r (Node r) m)
 
 validRef :: Ref -> Bool
 validRef = (== 20) . B.length . unRef
 
-empty :: Ref
-empty = Ref . B.pack $ take 20 $ repeat 0
-
-null :: Ref -> Bool
-null = (== empty)
-
-createValue :: Monad m => B.ByteString -> RawDBOperation m Ref
+createValue :: (Monad m, Nullable r) => B.ByteString -> RawDBOperation r m r
 createValue dat =
   lift $ store $ Value dat
 
-getValue :: Monad m => Ref -> RawDBOperation m B.ByteString
+getValue :: (Monad m, Nullable r) => r -> RawDBOperation r m B.ByteString
 getValue ref =
-  if DBNode.null ref then
+  if null ref then
     throwError NullReference
   else do
     node <- lift $ get ref
@@ -51,13 +52,13 @@ getValue ref =
       Value st -> return st
       _ -> throwError TypeError
 
-createLabel :: Monad m => B.ByteString -> Ref -> RawDBOperation m Ref
+createLabel :: (Monad m, Nullable r) => B.ByteString -> r -> RawDBOperation r m r
 createLabel label ref =
   lift $ store $ Label label ref
 
-unlabel :: Monad m => B.ByteString -> Ref -> RawDBOperation m Ref
+unlabel :: (Monad m, Nullable r) => B.ByteString -> r -> RawDBOperation r m r
 unlabel label ref =
-  if DBNode.null ref then
+  if null ref then
     return ref
   else do
     node <- lift $ get ref
@@ -70,9 +71,9 @@ unlabel label ref =
       _ ->
         throwError TypeError
 
-getLabel :: Monad m => Ref -> RawDBOperation m (B.ByteString, Ref)
+getLabel :: (Monad m, Nullable r) => r -> RawDBOperation r m (B.ByteString, r)
 getLabel ref = do
-  if DBNode.null ref then 
+  if null ref then 
     throwError NullReference
   else do
     node <- lift $ get ref
@@ -82,7 +83,7 @@ getLabel ref = do
       _ ->
         throwError TypeError
 
-traverse :: Node -> [Ref]
+traverse :: Node r -> [r]
 traverse (Branch options) = map snd options
 traverse (Shortcut _ r) = [r]
 traverse (Value _) = []

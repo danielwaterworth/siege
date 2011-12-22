@@ -2,10 +2,12 @@
 
 module DBTree where
 
+import Prelude hiding (null)
+
 import Data.Maybe
 import Data.Word
 import qualified Data.ByteString as B
-import Data.List
+import Data.List hiding (null)
 import qualified Data.Enumerator as E
 
 import Data.Set (Set)
@@ -21,12 +23,14 @@ import Store
 import DBNode (Ref, Node(..), RawDBOperation, DBError(..))
 import qualified DBNode as N
 
-lookup :: Monad m => Ref -> B.ByteString -> RawDBOperation m Ref
+import Nullable
+
+lookup :: (Monad m, Nullable r) => r -> B.ByteString -> RawDBOperation r m r
 lookup ref h =
-  if B.null h then
+  if null h then
     return ref
-  else if N.null ref then
-    return N.empty
+  else if null ref then
+    return empty
   else do
     node <- lift $ get ref
     case node of
@@ -34,20 +38,20 @@ lookup ref h =
         let option = find (\(c, _) -> c == B.head h) options in
           case option of
             Just (_, r) -> DBTree.lookup r $ B.tail h
-            Nothing -> return N.empty
+            Nothing -> return empty
       Shortcut h' item' -> do
         if h' == h then
           return item'
         else
-          return N.empty
+          return empty
       _ ->
         throwError TypeError
 
-insert :: Monad m => Ref -> B.ByteString -> Ref -> RawDBOperation m Ref
+insert :: (Monad m, Nullable r) => r -> B.ByteString -> r -> RawDBOperation r m r
 insert ref h item =
-  if B.null h then
+  if null h then
     return item
-  else if N.null ref then do
+  else if null ref then do
     lift $ store $ Shortcut h item
   else do
     node <- lift $ get ref
@@ -61,7 +65,7 @@ insert ref h item =
               let options'' = (B.head h, ref):options'
               lift $ store $ Branch options''
             Nothing -> do
-              ref <- DBTree.insert N.empty (B.tail h) item
+              ref <- DBTree.insert empty (B.tail h) item
               let options' = (B.head h, ref):options
               lift $ store $ Branch options'
       Shortcut path item' -> do
@@ -73,20 +77,20 @@ insert ref h item =
                   b' <- construct (B.tail ah) ai (B.tail bh) bi
                   lift $ store $ Branch [(B.head ah, b')]
                 else do
-                  a <- DBTree.insert N.empty (B.tail ah) ai
-                  b <- DBTree.insert N.empty (B.tail bh) bi
+                  a <- DBTree.insert empty (B.tail ah) ai
+                  b <- DBTree.insert empty (B.tail bh) bi
                   lift $ store $ Branch [(B.head ah, a), (B.head bh, b)] in
                     construct path item' h item
       _ ->
         throwError TypeError
 
 -- TODO: collapse a branch and a shortcut to a single shortcut
-delete :: Monad m => Ref -> B.ByteString -> RawDBOperation m Ref
+delete :: (Monad m, Nullable r) => r -> B.ByteString -> RawDBOperation r m r
 delete ref h =
-  if B.null h then
-    return N.empty
-  else if N.null ref then
-    return N.empty
+  if null h then
+    return empty
+  else if null ref then
+    return empty
   else do
     node <- lift $ get ref
     case node of
@@ -96,7 +100,7 @@ delete ref h =
             Just (_, r) -> do
               ref <- DBTree.delete r (B.tail h)
               let options' = filter (\(c, _) -> c /= B.head h) options
-              if N.null ref then
+              if null ref then
                 createBranch options'
               else do
                 let options'' = (B.head h, ref):options'
@@ -105,15 +109,15 @@ delete ref h =
               return ref
       Shortcut path item -> do
         if path == h then
-          return N.empty
+          return empty
         else
           return ref
       _ ->
         throwError TypeError
  where
   createBranch options = do
-    if Prelude.null options then
-      return N.empty
+    if null options then
+      return empty
     else if length options == 1 then do
       let ref = (snd . head) options
       node <- lift $ get ref
@@ -126,12 +130,12 @@ delete ref h =
     else
       lift $ store $ Branch options
 
-iterate :: Monad m => Ref -> E.Enumerator Ref (RawDBOperation m) a
+iterate :: (Monad m, Nullable r) => r -> E.Enumerator r (RawDBOperation r m) a
 iterate =
   iterate' 20
  where
   iterate' n ref s =
-    if N.null ref then
+    if null ref then
       E.returnI s
     else if n == 0 then
       case s of 
@@ -175,15 +179,14 @@ mergeLists fn a b c = do
     return $ fmap (\v' -> (key, v')) v) keys
   return $ fmap (catMaybes . map (\(k, v) -> fmap (\v' -> (k, v')) v)) $ sequence out
 
-merge :: Monad m => MergeFn (RawDBOperation m) (Maybe Ref) -> MergeFn (RawDBOperation m) Ref
+merge :: (Monad m, Nullable r, Eq r) => MergeFn (RawDBOperation r m) (Maybe r) -> MergeFn (RawDBOperation r m) r
 merge fn a b c = do
   out <- merge' 20 fn (Just a) (Just b) (Just c)
   case out of
     Nothing -> return Nothing
-    Just Nothing -> return $ Just N.empty
+    Just Nothing -> return $ Just empty
     Just (Just v) -> return $ Just v
  where
-  merge' :: Monad m => Int -> Endo (MergeFn (RawDBOperation m) (Maybe Ref))
   merge' n fn a b c = do
     o <- trivialMerge a b c
     case o of
@@ -221,6 +224,6 @@ merge fn a b c = do
                 return $ Just $ Just r
             Nothing ->
               return Nothing
-  getOptions :: Monad m => Ref -> (RawDBOperation m) [(Word8, Ref)]
+  getOptions :: Monad m => Ref -> (RawDBOperation Ref m) [(Word8, Ref)]
   getOptions r = do
     undefined

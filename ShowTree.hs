@@ -1,5 +1,8 @@
 module ShowTree where
 
+import Prelude hiding (null)
+import Nullable
+
 import Data.Word
 import qualified Data.ByteString as B
 import Store
@@ -13,9 +16,9 @@ data Tree =
   TreeLabel B.ByteString Tree |
   TreeArray [Tree] deriving (Show)
 
-pullTree :: Monad m => Ref -> StoreT Ref Node m Tree
+pullTree :: (Monad m, Nullable r) => r -> StoreT r (Node r) m Tree
 pullTree ref =
-  if DBNode.null ref then
+  if null ref then
     return Empty
   else do
     node <- get ref
