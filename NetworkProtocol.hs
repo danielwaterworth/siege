@@ -194,10 +194,18 @@ protocol = flip (>>) (return ()) $ flip runStateT Map.empty $ forever $ do
     _ ->
       case command com args of
         Just (Left c') -> lift $ do
-          Right r <- performRead c'
-          sendReply r
-        Just (Right c') -> do
-          Right r <- lift $ performAlter c'
-          lift $ sendReply r
+          r <- performRead c'
+          case r of
+            Right r' -> sendReply r'
+            Left N.NullReference -> sendReply $ BulkReply Nothing
+            Left N.TypeError -> sendReply $ ErrorReply "type error"
+            Left _ -> sendReply $ ErrorReply "unhandled error"
+        Just (Right c') -> lift $ do
+          r <- performAlter c'
+          case r of
+            Right r' -> sendReply r'
+            Left N.NullReference -> sendReply $ BulkReply Nothing
+            Left N.TypeError -> sendReply $ ErrorReply "type error"
+            Left _ -> sendReply $ ErrorReply "unhandled error"
         Nothing -> do
           lift $ sendReply $ ErrorReply "unknown command"
