@@ -1,10 +1,17 @@
 -- Experimental Disk based backend
 -- Append only to begin with, at some point I'll make it do log structuring
 
-module Disk where
-
 import Prelude hiding (null)
 import Nullable
+
+import Control.Concurrent
+import Control.Monad
+import Control.Monad.Trans.Error
+import StringHelper
+import System.IO
+import Flushable
+import NetworkProtocol
+import NetworkHelper
 
 import Store
 
@@ -53,3 +60,14 @@ withHandle hnd op = do
     Store v c -> do
       ref <- putNode hnd v
       withHandle hnd $ c ref
+
+main = do
+  withFile "./test.db" ReadWriteMode (\hnd -> do
+    var <- newFVar empty
+    forkIO $ forever $ flushFVar (\head -> do
+      print ("new head", head)
+      -- TODO write reference to disk somehow
+      return ()) var
+    listenAt 4050 (\sock -> do
+      print "new socket [="
+      convert protocol sock var (withHandle hnd)))

@@ -2,3 +2,5 @@
 *.o
 gc
 main
+disk
+test.db
