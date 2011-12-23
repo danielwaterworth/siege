@@ -20,7 +20,7 @@ instance Nullable Ref where
 data Node r =
   Branch [(Word8, r)] |
   Shortcut B.ByteString r |
-  --SequenceNode Int r r |
+  Sequence Word64 r r |
   Value B.ByteString |
   Label B.ByteString r |
   Array [r] deriving (Read, Show, Eq)

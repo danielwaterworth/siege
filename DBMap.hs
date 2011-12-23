@@ -20,9 +20,10 @@ import DBNode (Ref, Node(..), RawDBOperation, DBError(..))
 import qualified DBNode as N
 import DBTree as T
 import Hash
-import IterateeTrans
 
-ident = B.pack $ map (fromIntegral . ord) "Map"
+import StringHelper
+
+ident = stToB "Map"
 
 insert :: (Monad m, Nullable r) => r -> B.ByteString -> r -> RawDBOperation r m r
 insert ref key item = do
