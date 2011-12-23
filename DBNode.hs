@@ -27,7 +27,6 @@ data Node r =
 
 data DBError =
   TypeError |
-  NullReference |
   OtherError
 
 instance Error DBError where
@@ -42,14 +41,14 @@ createValue :: (Monad m, Nullable r) => B.ByteString -> RawDBOperation r m r
 createValue dat =
   lift $ store $ Value dat
 
-getValue :: (Monad m, Nullable r) => r -> RawDBOperation r m B.ByteString
+getValue :: (Monad m, Nullable r) => r -> RawDBOperation r m (Maybe B.ByteString)
 getValue ref =
   if null ref then
-    throwError NullReference
+    return Nothing
   else do
     node <- lift $ get ref
     case node of
-      Value st -> return st
+      Value st -> return $ Just st
       _ -> throwError TypeError
 
 createLabel :: (Monad m, Nullable r) => B.ByteString -> r -> RawDBOperation r m r
@@ -71,15 +70,15 @@ unlabel label ref =
       _ ->
         throwError TypeError
 
-getLabel :: (Monad m, Nullable r) => r -> RawDBOperation r m (B.ByteString, r)
+getLabel :: (Monad m, Nullable r) => r -> RawDBOperation r m (Maybe (B.ByteString, r))
 getLabel ref = do
   if null ref then 
-    throwError NullReference
+    return Nothing
   else do
     node <- lift $ get ref
     case node of 
       Label l r ->
-        return (l, r)
+        return $ Just (l, r)
       _ ->
         throwError TypeError
 

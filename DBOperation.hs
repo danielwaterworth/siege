@@ -102,7 +102,7 @@ convert (CreateValue v c) = do
   convert $ c o
 convert (GetValue r c) = do
   o <- N.getValue r
-  convert $ c $ Just o
+  convert $ c o
 
 convert (MapHas r k c) = do
   v <- Map.lookup r k

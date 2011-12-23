@@ -197,14 +197,12 @@ protocol = flip (>>) (return ()) $ flip runStateT Map.empty $ forever $ do
           r <- performRead c'
           case r of
             Right r' -> sendReply r'
-            Left N.NullReference -> sendReply $ BulkReply Nothing
             Left N.TypeError -> sendReply $ ErrorReply "type error"
             Left _ -> sendReply $ ErrorReply "unhandled error"
         Just (Right c') -> lift $ do
           r <- performAlter c'
           case r of
             Right r' -> sendReply r'
-            Left N.NullReference -> sendReply $ BulkReply Nothing
             Left N.TypeError -> sendReply $ ErrorReply "type error"
             Left _ -> sendReply $ ErrorReply "unhandled error"
         Nothing -> do

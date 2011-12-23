@@ -8,9 +8,11 @@ import Store
 import qualified Data.Enumerator as E
 import qualified Data.Enumerator.List as EL
 
+import Control.Monad
 import Control.Monad.Trans
 import Control.Monad.Trans.Maybe
 
+import Data.Maybe
 import Data.Char
 import qualified Data.ByteString as B
 
@@ -61,4 +63,4 @@ delete ref key = do
 iterate :: (Monad m, Nullable r) => r -> E.Enumerator (B.ByteString, r) (RawDBOperation r m) a
 iterate ref i = do
   ref' <- lift $ N.unlabel ident ref
-  (T.iterate ref' E.$= (EL.mapM N.getLabel)) i
+  (T.iterate ref' E.$= (EL.concatMapM $ (\r -> liftM maybeToList $ N.getLabel r))) i

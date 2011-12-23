@@ -19,25 +19,29 @@ import DBNode
 import DBNodeBinary
 
 import Data.Int
-import Data.Binary
+import Data.Binary as Bin
 import qualified Data.ByteString as B
 
 import System.IO
 
 import StringHelper
 
-type DiskRef = Maybe Word64
+newtype DiskRef = DiskRef Word64 deriving (Eq, Show)
+
+instance Binary DiskRef where
+  get = liftM DiskRef Bin.get
+  put (DiskRef r) = Bin.put r
+
+instance Nullable DiskRef where
+  empty = DiskRef (-1)
+  null = (== empty)
 
 getNode :: Handle -> DiskRef -> IO (Node DiskRef)
-getNode hnd ref = do
-  case ref of
-    Just r' -> do
-      hSeek hnd AbsoluteSeek $ fromIntegral r'
-      sz <- B.hGet hnd 8
-      v <- B.hGet hnd $ fromIntegral (decode (bToL sz) :: Word64)
-      return $ decode $ bToL v
-    Nothing ->
-      error "null reference"
+getNode hnd (DiskRef r) = do
+  hSeek hnd AbsoluteSeek $ fromIntegral r
+  sz <- B.hGet hnd 8
+  v <- B.hGet hnd $ fromIntegral (decode (bToL sz) :: Word64)
+  return $ decode $ bToL v
 
 putNode :: Handle -> Node DiskRef -> IO DiskRef
 putNode hnd node = do
@@ -47,7 +51,7 @@ putNode hnd node = do
   let sz = B.length n'
   B.hPut hnd $ lToB $ encode sz
   B.hPut hnd n'
-  return $ Just $ fromIntegral pos
+  return $ DiskRef $ fromIntegral pos
 
 withHandle :: Handle -> StoreT DiskRef (Node DiskRef) IO a -> IO a
 withHandle hnd op = do

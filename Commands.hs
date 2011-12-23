@@ -39,7 +39,7 @@ readCommand :: (Nullable r) => String -> [B.ByteString] -> Maybe (r -> DBOperati
 readCommand "type" [key] = Just (\head -> do
   ref <- mapLookup head key
   ty <- getType ref
-  return $ BulkReply $ maybe Nothing (Just . show) ty)
+  return $ BulkReply $ fmap show ty)
 readCommand "get" [key] = Just (\head -> do
   ref <- mapLookup head key
   val <- getValue ref

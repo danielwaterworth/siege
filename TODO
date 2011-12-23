@@ -1,4 +1,4 @@
+* fix transactions
 * allow multiple redis backends
 * write iteratee base recvLine
-* implement watch properly
 * implement pubsub
