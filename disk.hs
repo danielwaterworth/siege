@@ -22,11 +22,12 @@ import Data.Int
 import Data.Binary as Bin
 import qualified Data.ByteString as B
 
+import System.Directory
 import System.IO
 
 import StringHelper
 
-newtype DiskRef = DiskRef Word64 deriving (Eq, Show)
+newtype DiskRef = DiskRef Word64 deriving (Eq, Show, Read)
 
 instance Binary DiskRef where
   get = liftM DiskRef Bin.get
@@ -67,10 +68,14 @@ withHandle hnd op = do
 
 main = do
   withFile "./test.db" ReadWriteMode (\hnd -> do
-    var <- newFVar empty
+    v <- liftM read $ readFile "head"
+    var <- newFVar v
     forkIO $ forever $ flushFVar (\head -> do
       print ("new head", head)
-      -- TODO write reference to disk somehow
+      writeFile "head.new" (show head)
+      renameFile "head" "head.old"
+      renameFile "head.new" "head"
+      removeFile "head.old"
       return ()) var
     listenAt 4050 (\sock -> do
       print "new socket [="
