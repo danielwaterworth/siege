@@ -1,3 +1,5 @@
+{-# LANGUAGE ExistentialQuantification, Rank2Types #-}
+
 -- Experimental Disk based backend
 -- Append only to begin with, at some point I'll make it do log structuring
 
@@ -24,6 +26,7 @@ import qualified Data.ByteString as B
 
 import System.Directory
 import System.IO
+import System.Posix.IO
 
 import StringHelper
 
@@ -66,12 +69,18 @@ withHandle hnd op = do
       ref <- putNode hnd v
       withHandle hnd $ c ref
 
+withHandle' :: (forall x. (Handle -> IO x) -> IO x) -> StoreT DiskRef (Node DiskRef) IO a -> IO a
+withHandle' hnd op = hnd (\hnd' -> withHandle hnd' op)
+
 main = do
   withFile "./test.db" ReadWriteMode (\hnd -> do
+    hnd' <- newMVar hnd
     v <- liftM read $ readFile "head"
     var <- newFVar v
     forkIO $ forever $ flushFVar (\head -> do
       print ("new head", head)
+      withMVar hnd' hFlush
+        -- TODO: sync to disk, fsync $ handleToFd hnd
       writeFile "head.new" (show head)
       renameFile "head" "head.old"
       renameFile "head.new" "head"
@@ -79,4 +88,4 @@ main = do
       return ()) var
     listenAt 4050 (\sock -> do
       print "new socket [="
-      convert protocol sock var (withHandle hnd)))
+      convert protocol sock var (withHandle' (withMVar hnd'))))
