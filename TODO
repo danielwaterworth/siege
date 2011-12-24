@@ -1,4 +1,9 @@
 * fix transactions
+* implement pubsub
+
+* finish writing sequence operations,
+
+* explicit disk caching,
+
 * allow multiple redis backends
 * write iteratee base recvLine
-* implement pubsub
