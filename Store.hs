@@ -5,7 +5,6 @@ module Store where
 import Data.Map (Map)
 import qualified Data.Map as M
 import Control.Monad.Trans
-import Database.Redis.Redis as R
 import Hash
 
 -- The semantics of store should be that it continues as soon as the reference 
