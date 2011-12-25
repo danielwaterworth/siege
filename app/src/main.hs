@@ -18,17 +18,16 @@ import StringHelper
 import Store
 import DoStore
 
-main = do
-  print "starting..."
+initZookeeper = do
   Z.setLogLevel Z.Error
   zk <- Z.init "localhost:2181" Nothing 10000 Nothing
   exists <- Z.exists zk "/head" Nothing
-  if isNothing exists then do
+  when (isNothing exists) $ do
     (acl, _) <- Z.getAcl zk "/"
     Z.create zk "/head" (bToSt $ N.unRef empty) [] acl
-    return ()
-  else
-    return ()
+  return zk
+
+initRedis = do
   redis <- connect localhost defaultPort
   redisvar <- newMVar redis
   let redis = (\fn -> do
@@ -36,11 +35,17 @@ main = do
         out <- fn redis
         putMVar redisvar redis
         return out)
+  return redis
+
+main :: IO ()
+main = do
+  print "starting..."
+  zk <- initZookeeper
+  redis <- initRedis
   var <- newFVar empty
   forkIO $ forever $ flushFVar (\head -> do
     print ("new head", head)
-    Z.set zk "/head" (bToSt $ N.unRef head) Nothing
-    return ()) var
+    Z.set zk "/head" (bToSt $ N.unRef head) Nothing) var
   listenAt 4050 (\sock -> do
     print "new socket [="
     convert protocol sock var (withRedis [redis] . cache))
