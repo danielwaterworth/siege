@@ -1,7 +1,1 @@
-*.hi
-*.o
-gc
-main
-disk
-test.db
-head
+dist

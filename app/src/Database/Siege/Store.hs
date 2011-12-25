@@ -1,11 +1,11 @@
 {-# LANGUAGE ExistentialQuantification, Rank2Types #-}
 
-module Store where
+module Database.Siege.Store where
 
 import Data.Map (Map)
 import qualified Data.Map as M
 import Control.Monad.Trans
-import Hash
+import Database.Siege.Hash
 
 -- The semantics of store should be that it continues as soon as the reference 
 -- has been calculated, but that the entire operation shouldn't complete until 
@@ -79,8 +79,8 @@ cache op = do
           Just v ->
             cache' m $ c v
           Nothing -> do
-            v <- Store.get k
+            v <- get k
             cache' (M.insert k v m) $ c v
       Store v c -> do
-        k <- Store.store v
+        k <- store v
         cache' (M.insert k v m) $ c k

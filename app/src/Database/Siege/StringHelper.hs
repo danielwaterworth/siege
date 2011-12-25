@@ -1,4 +1,4 @@
-module StringHelper where
+module Database.Siege.StringHelper where
 
 import Data.Char
 import qualified Data.ByteString as B

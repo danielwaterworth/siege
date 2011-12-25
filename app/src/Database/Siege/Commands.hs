@@ -1,17 +1,19 @@
-module Commands where
+module Database.Siege.Commands where
 
 import Prelude hiding (null)
-import Nullable
+import Data.Nullable
 
 import qualified Data.ByteString as B
 import Control.Monad.Trans
 import Control.Monad.Trans.State
-import Connection
-import DBOperation
-import DBNode (Ref, Node)
 import qualified Data.Enumerator as E
-import StringHelper
-import TraceHelper
+
+import Database.Siege.Connection
+import Database.Siege.DBOperation
+import Database.Siege.DBNode (Ref, Node)
+import Database.Siege.StringHelper
+
+import Debug.Trace.Monad
 
 data Reply =
   ErrorReply String |

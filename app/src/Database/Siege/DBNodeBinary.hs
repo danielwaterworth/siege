@@ -1,6 +1,7 @@
-module DBNodeBinary where
+module Database.Siege.DBNodeBinary where
 
-import DBNode
+import Database.Siege.DBNode
+
 import Data.Binary
 import Data.Binary.Put
 import Data.Binary.Get

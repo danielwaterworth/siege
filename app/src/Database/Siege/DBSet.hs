@@ -1,26 +1,27 @@
-module DBSet where
+{-# LANGUAGE DoAndIfThenElse #-}
+
+module Database.Siege.DBSet where
 
 import Prelude hiding (null)
-import Nullable
+import Data.Nullable
 
-import Store
+import Database.Siege.Store
 
 import qualified Data.Enumerator as E
 import qualified Data.Enumerator.List as EL
+
+import Data.Maybe
+import Data.Char
+import qualified Data.ByteString as B
 
 import Control.Monad
 import Control.Monad.Trans
 import Control.Monad.Trans.Maybe
 
-import Data.Maybe
-import Data.Char
-
-import DBNode as N
-import DBTree as T
-import Hash
-import IterateeTrans
-
-import qualified Data.ByteString as B
+import Database.Siege.DBNode as N
+import Database.Siege.DBTree as T
+import Database.Siege.Hash
+import Database.Siege.IterateeTrans
 
 ident = B.pack $ map (fromIntegral . ord) "Set"
 

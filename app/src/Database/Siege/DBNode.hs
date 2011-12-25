@@ -1,13 +1,16 @@
-module DBNode where
+{-# LANGUAGE DoAndIfThenElse #-}
+
+module Database.Siege.DBNode where
 
 import Prelude hiding (null)
+import Data.Nullable
 
-import Store
+import Database.Siege.Store
+
 import Control.Monad.Trans
 import Control.Monad.Trans.Error
 import Data.Word
 import qualified Data.ByteString as B
-import Nullable
 
 newtype Ref = Ref {
   unRef :: B.ByteString

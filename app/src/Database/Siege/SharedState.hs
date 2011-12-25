@@ -1,10 +1,11 @@
 {-# LANGUAGE ExistentialQuantification, Rank2Types #-}
 
-module SharedState where
+module Database.Siege.SharedState where
 
 import Control.Concurrent.MVar
 import Control.Monad.Trans
-import Flushable
+
+import Database.Siege.Flushable
 
 data Step s m a =
   Done a |

@@ -1,4 +1,4 @@
-module Flushable where
+module Database.Siege.Flushable where
 
 import Control.Concurrent.MVar
 import Data.IORef

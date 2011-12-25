@@ -1,12 +1,12 @@
-module ShowTree where
+module Database.Siege.ShowTree where
 
 import Prelude hiding (null)
-import Nullable
+import Data.Nullable
 
 import Data.Word
 import qualified Data.ByteString as B
-import Store
-import DBNode
+import Database.Siege.Store
+import Database.Siege.DBNode
 
 data Tree =
   Empty |

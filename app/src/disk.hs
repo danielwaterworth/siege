@@ -1,24 +1,25 @@
-{-# LANGUAGE ExistentialQuantification, Rank2Types #-}
+{-# LANGUAGE ExistentialQuantification, Rank2Types, DoAndIfThenElse #-}
 
 -- Experimental Disk based backend
 -- Append only to begin with, at some point I'll make it do log structuring
 
 import Prelude hiding (null)
-import Nullable
+import Data.Nullable
 
 import Control.Concurrent
 import Control.Monad
 import Control.Monad.Trans.Error
-import StringHelper
 import System.IO
-import Flushable
-import NetworkProtocol
-import NetworkHelper
 
-import Store
+import Database.Siege.StringHelper
+import Database.Siege.Flushable
+import Database.Siege.NetworkProtocol
+import Database.Siege.NetworkHelper
 
-import DBNode
-import DBNodeBinary
+import Database.Siege.Store
+
+import Database.Siege.DBNode
+import Database.Siege.DBNodeBinary
 
 import Data.Int
 import Data.Binary as Bin
@@ -28,7 +29,7 @@ import System.Directory
 import System.IO
 import System.Posix.IO
 
-import StringHelper
+import Database.Siege.StringHelper
 
 newtype DiskRef = DiskRef Word64 deriving (Eq, Show, Read)
 

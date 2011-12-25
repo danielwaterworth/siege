@@ -1,21 +1,24 @@
 {-# LANGUAGE ExistentialQuantification, Rank2Types #-}
 
-module DBOperation where
+module Database.Siege.DBOperation where
 
 import Prelude hiding (null)
-import Nullable
+import Data.Nullable
 
 import qualified Data.ByteString as B
 
 import Control.Monad
 import Control.Monad.Trans
-import qualified DBMap as Map
-import qualified DBSet as Set
-import qualified Store as S
-import DBNode (Ref, Node, RawDBOperation)
-import qualified DBNode as N
+
 import qualified Data.Enumerator as E
-import IterateeTrans
+
+import qualified Database.Siege.DBMap as Map
+import qualified Database.Siege.DBSet as Set
+import qualified Database.Siege.Store as S
+import Database.Siege.DBNode (Ref, Node, RawDBOperation)
+import qualified Database.Siege.DBNode as N
+
+import Database.Siege.IterateeTrans
 
 data NodeType =
   Map |

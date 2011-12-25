@@ -1,19 +1,20 @@
-{-# LANGUAGE ExistentialQuantification, Rank2Types #-}
+{-# LANGUAGE ExistentialQuantification, Rank2Types, DoAndIfThenElse #-}
 
-module Connection where
+module Database.Siege.Connection where
 
 import Data.Char
 import Data.List
 import qualified Data.ByteString as B
 import qualified Data.ByteString.Lazy as L
 import qualified Data.Enumerator as E
-import qualified IterateeTrans as I
+import qualified Database.Siege.IterateeTrans as I
 import Control.Monad
 import Control.Concurrent
 import Control.Monad.Trans
 import Network.Socket hiding (recv, send)
 import qualified Network.Socket.ByteString as S
-import TraceHelper
+
+import Debug.Trace.Monad
 
 data Step m a =
   Done a |

@@ -1,4 +1,4 @@
-module NetworkHelper where
+module Database.Siege.NetworkHelper where
 
 import Control.Monad
 import Control.Concurrent

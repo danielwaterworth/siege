@@ -1,9 +1,9 @@
-{-# LANGUAGE ExistentialQuantification, Rank2Types, ImpredicativeTypes #-}
+{-# LANGUAGE ExistentialQuantification, Rank2Types, ImpredicativeTypes, DoAndIfThenElse #-}
 
-module NetworkProtocol where
+module Database.Siege.NetworkProtocol where
 
 import Prelude hiding (null)
-import Nullable
+import Data.Nullable
 
 import Data.Maybe
 import Data.Char
@@ -17,24 +17,23 @@ import Control.Monad.Trans
 import Control.Monad.Trans.Error
 import Control.Monad.Trans.Maybe
 import Control.Monad.Trans.State as State
-import Connection as C
-import SharedState as Sh
-import Store (StoreT(..), cache)
-import qualified Store as St
-import DBNode (Ref, Node, DBError)
-import qualified DBNode as N
-import qualified DBMap as M
-import ShowTree
-import DBOperation
-import DoStore
-import Commands
-import StringHelper
+
+import Database.Siege.Connection as C
+import Database.Siege.SharedState as Sh
+import Database.Siege.Store (StoreT(..), cache)
+import qualified Database.Siege.Store as St
+import Database.Siege.DBNode (Ref, Node, DBError)
+import qualified Database.Siege.DBNode as N
+import qualified Database.Siege.DBMap as M
+import Database.Siege.ShowTree
+import Database.Siege.DBOperation as DBOp
+import Database.Siege.Commands
+import Database.Siege.StringHelper
+import Database.Siege.Flushable
 
 import Network.Socket (Socket)
-import Database.Redis.Redis (Redis)
-import Flushable (FVar)
 
-import TraceHelper
+import Debug.Trace.Monad
 
 -- The reason this isn't over the DBOperation monad as you might expect is that 
 -- it needs to be able to handle errors and to send them back to the client 
@@ -92,7 +91,7 @@ recvCommand = do
 performAlter :: (Nullable r) => (r -> DBOperation r (a, r)) -> NetworkOp r (Either DBError a)
 performAlter op =
   lift $ alter $ (\head -> do
-    v <- runErrorT $ DBOperation.convert $ op head
+    v <- runErrorT $ DBOp.convert $ op head
     case v of
       Right (a, r) -> return (r, Right a)
       Left e -> return (head, Left e))
@@ -100,7 +99,7 @@ performAlter op =
 performRead :: (Nullable r) => (r -> DBOperation r a) -> NetworkOp r (Either DBError a)
 performRead op = do
   head <- lift Sh.get
-  lift $ lift $ runErrorT $ DBOperation.convert $ op head
+  lift $ lift $ runErrorT $ DBOp.convert $ op head
 
 constructList :: Monad m => m (Either (Maybe a) b) -> m (Either [a] b)
 constructList act = do

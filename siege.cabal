@@ -1,0 +1,17 @@
+Name:                siege
+Version:             0.1
+Synopsis:            A DBMS written in Haskell.
+License:             MIT
+License-file:        LICENSE
+Author:              DanielWaterworth
+Maintainer:          Da.Waterworth@gmail.com
+Category:            Database
+Build-type:          Simple
+Extra-source-files:  README.md
+Cabal-version:       >=1.2
+
+Executable disk
+  build-depends: base, bytestring, unix, directory, binary, mtl, transformers, 
+                 SHA, enumerator, hex, containers, network, random
+  hs-source-dirs: app/src
+  Main-is: disk.hs

@@ -1,13 +1,14 @@
-{-# LANGUAGE ScopedTypeVariables #-}
+{-# LANGUAGE ScopedTypeVariables, DoAndIfThenElse #-}
 
-module DBTree where
+module Database.Siege.DBTree where
 
-import Prelude hiding (null)
+import Prelude hiding (null, lookup)
+import Data.Nullable
 
 import Data.Maybe
 import Data.Word
 import qualified Data.ByteString as B
-import Data.List hiding (null)
+import Data.List hiding (null, lookup, delete, insert)
 import qualified Data.Enumerator as E
 
 import Data.Set (Set)
@@ -18,12 +19,11 @@ import qualified Data.Map as M
 import Control.Monad
 import Control.Monad.Trans
 import Control.Monad.Trans.Error
-import Store
 
-import DBNode (Ref, Node(..), RawDBOperation, DBError(..))
-import qualified DBNode as N
+import Database.Siege.Store
 
-import Nullable
+import Database.Siege.DBNode (Ref, Node(..), RawDBOperation, DBError(..))
+import qualified Database.Siege.DBNode as N
 
 lookup :: (Monad m, Nullable r) => r -> B.ByteString -> RawDBOperation r m r
 lookup ref h =
@@ -37,7 +37,7 @@ lookup ref h =
       Branch options -> do
         let option = find (\(c, _) -> c == B.head h) options in
           case option of
-            Just (_, r) -> DBTree.lookup r $ B.tail h
+            Just (_, r) -> lookup r $ B.tail h
             Nothing -> return empty
       Shortcut h' item' -> do
         if h' == h then
@@ -60,12 +60,12 @@ insert ref h item =
         let option = find (\(c, _) -> c == B.head h) options in
           case option of
             Just (_, r) -> do
-              ref <- DBTree.insert r (B.tail h) item
+              ref <- insert r (B.tail h) item
               let options' = filter (\(c, _) -> c /= B.head h) options
               let options'' = (B.head h, ref):options'
               lift $ store $ Branch options''
             Nothing -> do
-              ref <- DBTree.insert empty (B.tail h) item
+              ref <- insert empty (B.tail h) item
               let options' = (B.head h, ref):options
               lift $ store $ Branch options'
       Shortcut path item' -> do
@@ -77,8 +77,8 @@ insert ref h item =
                   b' <- construct (B.tail ah) ai (B.tail bh) bi
                   lift $ store $ Branch [(B.head ah, b')]
                 else do
-                  a <- DBTree.insert empty (B.tail ah) ai
-                  b <- DBTree.insert empty (B.tail bh) bi
+                  a <- insert empty (B.tail ah) ai
+                  b <- insert empty (B.tail bh) bi
                   lift $ store $ Branch [(B.head ah, a), (B.head bh, b)] in
                     construct path item' h item
       _ ->
@@ -98,7 +98,7 @@ delete ref h =
         let option = find (\(c, _) -> c == B.head h) options in
           case option of
             Just (_, r) -> do
-              ref <- DBTree.delete r (B.tail h)
+              ref <- delete r (B.tail h)
               let options' = filter (\(c, _) -> c /= B.head h) options
               if null ref then
                 createBranch options'

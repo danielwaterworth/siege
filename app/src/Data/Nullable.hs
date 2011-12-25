@@ -1,4 +1,4 @@
-module Nullable where
+module Data.Nullable where
 
 import Prelude hiding (null)
 

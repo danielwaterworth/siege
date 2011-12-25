@@ -1,6 +1,6 @@
 {-# LANGUAGE ExistentialQuantification, Rank2Types #-}
 
-module IterateeTrans where
+module Database.Siege.IterateeTrans where
 
 import Control.Monad.Trans
 import qualified Data.Enumerator as E

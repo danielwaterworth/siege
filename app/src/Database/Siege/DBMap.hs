@@ -1,9 +1,11 @@
-module DBMap where
+{-# LANGUAGE DoAndIfThenElse #-}
+
+module Database.Siege.DBMap where
 
 import Prelude hiding (null)
-import Nullable
+import Data.Nullable
 
-import Store
+import Database.Siege.Store
 
 import qualified Data.Enumerator as E
 import qualified Data.Enumerator.List as EL
@@ -16,12 +18,12 @@ import Data.Maybe
 import Data.Char
 import qualified Data.ByteString as B
 
-import DBNode (Ref, Node(..), RawDBOperation, DBError(..))
-import qualified DBNode as N
-import DBTree as T
-import Hash
+import Database.Siege.DBNode (Ref, Node(..), RawDBOperation, DBError(..))
+import qualified Database.Siege.DBNode as N
+import Database.Siege.DBTree as T
+import Database.Siege.Hash
 
-import StringHelper
+import Database.Siege.StringHelper
 
 ident = stToB "Map"
 
