@@ -13,7 +13,6 @@ import Control.Concurrent
 import Control.Monad.Trans
 import Network.Socket hiding (recv, send)
 import qualified Network.Socket.ByteString as S
-import Network.Socket.Enumerator
 import TraceHelper
 
 data Step m a =
