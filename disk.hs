@@ -72,10 +72,15 @@ withHandle hnd op = do
 withHandle' :: (forall x. (Handle -> IO x) -> IO x) -> StoreT DiskRef (Node DiskRef) IO a -> IO a
 withHandle' hnd op = hnd (\hnd' -> withHandle hnd' op)
 
-main = do
+main =
   withFile "./test.db" ReadWriteMode (\hnd -> do
     hnd' <- newMVar hnd
-    v <- liftM read $ readFile "head"
+    headExists <- doesFileExist "head"
+    v <- if headExists then
+      liftM read $ readFile "head"
+    else do
+      writeFile "head" $ show (empty :: DiskRef)
+      return empty
     var <- newFVar v
     forkIO $ forever $ flushFVar (\head -> do
       print ("new head", head)
