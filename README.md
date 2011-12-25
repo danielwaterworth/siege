@@ -1,5 +1,6 @@
 The quickest way to get up and running is to do:
 
+    cabal install binary hex SHA enumerator
     ghc --make disk.hs
     ./disk
 
