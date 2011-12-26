@@ -9,6 +9,7 @@ import qualified Data.ByteString.Lazy as L
 import qualified Data.Enumerator as E
 import qualified Database.Siege.IterateeTrans as I
 import Control.Monad
+import Control.Monad.Hoist
 import Control.Concurrent
 import Control.Monad.Trans
 import Network.Socket hiding (recv, send)
@@ -41,6 +42,14 @@ instance MonadTrans ConnectionT where
 
 instance MonadIO m => MonadIO (ConnectionT m) where
   liftIO m = ConnectionT $ liftM Done (liftIO m)
+
+instance MonadHoist ConnectionT where
+  hoist f m = ConnectionT $ do
+    v <- f $ runConnectionT m
+    case v of
+      Done x -> return $ Done x
+      Send dat c -> return $ Send dat $ hoist f c
+      Recv n c -> return $ Recv (hoist f n) $ hoist f . c
 
 send :: Monad m => B.ByteString -> ConnectionT m ()
 send = ConnectionT . return . flip Send (return ())
@@ -125,13 +134,6 @@ recvLine = do
 --        subString (stToB "\r\n") l
 --        undefined
 
-monadChange :: (Monad m0, Monad m1) => (forall x. m0 x -> m1 x) -> ConnectionT m0 a -> ConnectionT m1 a
-monadChange fn op = ConnectionT $ do
-  v <- fn $ runConnectionT op
-  case v of
-    Done x -> return $ Done x
-    Send dat c -> return $ Send dat $ monadChange fn c
-    Recv n c -> return $ Recv (I.changeMonad fn n) $ monadChange fn . c
 
 withSocket :: Socket -> ConnectionT IO () -> IO ()
 withSocket sock op =

@@ -4,6 +4,7 @@ module Database.Siege.SharedState where
 
 import Control.Concurrent.MVar
 import Control.Monad
+import Control.Monad.Hoist
 import Control.Monad.Trans
 
 import Database.Siege.Flushable
@@ -32,19 +33,19 @@ instance MonadTrans (SharedStateT s) where
 instance MonadIO m => MonadIO (SharedStateT s m) where
   liftIO m = SharedStateT $ liftM Done (liftIO m)
 
+instance MonadHoist (SharedStateT s) where
+  hoist f m = SharedStateT $ do
+    v <- f $ runSharedStateT m
+    case v of
+      Done x -> return $ Done x
+      Alter m c -> return $ Alter (f . m) $ hoist f . c
+      Get c -> return $ Get $ hoist f . c
+
 alter :: Monad m => (s -> m (s, x)) -> SharedStateT s m x
 alter = SharedStateT . return . flip Alter return
 
 get :: Monad m => SharedStateT s m s
 get = SharedStateT $ return $ Get return
-
-monadChange :: (Monad m0, Monad m1) => (forall x. m0 x -> m1 x) -> SharedStateT s m0 a -> SharedStateT s m1 a
-monadChange fn op = SharedStateT $ do
-  v <- fn $ runSharedStateT op
-  case v of
-    Done x -> return $ Done x
-    Alter m c -> return $ Alter (fn . m) $ monadChange fn . c
-    Get c -> return $ Get $ monadChange fn . c
 
 withFVar :: FVar s -> SharedStateT s IO a -> IO a
 withFVar var op = do

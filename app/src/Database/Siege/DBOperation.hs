@@ -8,6 +8,7 @@ import Data.Nullable
 import qualified Data.ByteString as B
 
 import Control.Monad
+import Control.Monad.Hoist
 import Control.Monad.Trans
 
 import qualified Data.Enumerator as E
@@ -120,7 +121,7 @@ convert (MapDelete r k c) = do
   o <- Map.delete r k
   convert $ c o
 convert (MapItems r i c) = do
-  o <- E.run_ ((Map.iterate r) E.$$ (changeMonad convert i))
+  o <- E.run_ ((Map.iterate r) E.$$ (hoist convert i))
   convert $ c o
 
 convert (SetHas r k c) = do
@@ -133,5 +134,5 @@ convert (SetDelete r k c) = do
   o <- Set.delete r k
   convert $ c o
 convert (SetItems r i c) = do
-  o <- E.run_ ((Set.iterate r) E.$$ (changeMonad convert i))
+  o <- E.run_ ((Set.iterate r) E.$$ (hoist convert i))
   convert $ c o

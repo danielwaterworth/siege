@@ -5,6 +5,7 @@ module Database.Siege.Store where
 import Data.Map (Map)
 import qualified Data.Map as M
 import Control.Monad
+import Control.Monad.Hoist
 import Control.Monad.Trans
 import Database.Siege.Hash
 
@@ -36,6 +37,14 @@ instance MonadTrans (StoreT k v) where
 instance MonadIO m => MonadIO (StoreT k v m) where
   liftIO m = StoreT $ liftM Done (liftIO m)
 
+instance MonadHoist (StoreT k v) where
+  hoist f m = StoreT $ do
+    step <- f $ runStoreT m
+    case step of
+      Done a -> return $ Done a
+      Get k c -> return $ Get k $ hoist f . c
+      Store v c -> return $ Store v $ hoist f . c
+
 get k = StoreT $ return $ Get k return
 store v = StoreT $ return $ Store v return
 
@@ -54,14 +63,6 @@ valueChange forwards backwards op = StoreT $ do
     Done a -> return $ Done a
     Get k c -> return $ Get k (valueChange forwards backwards . c . backwards)
     Store v c -> return $ Store (forwards v) (valueChange forwards backwards . c)
-
-monadChange :: (Monad m0, Monad m1) => (forall x. m0 x -> m1 x) -> StoreT k v m0 a -> StoreT k v m1 a
-monadChange fn op = StoreT $ do
-  v <- fn $ runStoreT op
-  case v of
-    Done a -> return $ Done a
-    Get k c -> return $ Get k $ monadChange fn . c
-    Store v c -> return $ Store v $ monadChange fn . c
 
 cache :: (Ord k, Monad m) => StoreT k v m a -> StoreT k v m a
 cache op = do
