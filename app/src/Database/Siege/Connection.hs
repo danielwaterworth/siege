@@ -31,20 +31,16 @@ instance Monad m => Monad (ConnectionT m) where
   m >>= f = ConnectionT $ do
     v <- runConnectionT m
     case v of
-      Done x -> (runConnectionT . f) x
+      Done x -> runConnectionT (f x)
       Send s c -> return $ Send s (c >>= f)
-      Recv i c -> return $ Recv i ((flip (>>=) f) . c)
+      Recv i c -> return $ Recv i ((>>= f) . c)
       Close -> return $ Close
 
 instance MonadTrans ConnectionT where
-  lift m = ConnectionT $ do
-    v <- m
-    (return . Done) v
+  lift m = ConnectionT $ liftM Done m
 
 instance MonadIO m => MonadIO (ConnectionT m) where
-  liftIO m = ConnectionT $ do
-    v <- liftIO m
-    (return . Done) v
+  liftIO m = ConnectionT $ liftM Done (liftIO m)
 
 send :: Monad m => B.ByteString -> ConnectionT m ()
 send = ConnectionT . return . flip Send (return ())
@@ -59,14 +55,11 @@ retry :: Monad m => m (Maybe a) -> m a
 retry m = do
   v <- m
   case v of
-    Just v' ->
-      return v'
-    Nothing ->
-      retry m
+    Just v' -> return v'
+    Nothing -> retry m
 
 recvChunks :: Monad m => Int -> ConnectionT m [B.ByteString]
-recvChunks n =
-  recvI $ recv' n
+recvChunks n = recvI $ recv' n
  where
   recv' n = do
     dat <- E.continue return
@@ -74,15 +67,15 @@ recvChunks n =
       E.EOF ->
         error "unexpected EOF - fix me"
       E.Chunks c -> do
-        let l = foldl' (+) 0 $ map B.length c
-        if null c then do
+        let l = sum $ map B.length c
+        if null c then
           error "fix me"
         else if l == n then
           return c
-        else if n < l then do
+        else if n < l then
           let l' = L.fromChunks c
-          let n' = fromIntegral n
-          E.yield (L.toChunks $ L.take n' l') (E.Chunks $ L.toChunks $ L.drop n' l')
+              n' = fromIntegral n
+            in E.yield (L.toChunks $ L.take n' l') (E.Chunks $ L.toChunks $ L.drop n' l')
         else do
           dat <- recv' (n - l)
           return (c ++ dat)
@@ -96,12 +89,8 @@ recvLine :: Monad m => ConnectionT m B.ByteString
 recvLine = do
   st <- recv 1
   let st' = map (chr . fromIntegral) $ B.unpack st
-  if st' == "\r" then do
-    line <- gotcr
-    return $ B.append st line
-  else do
-    line <- recvLine
-    return $ B.append st line
+  line <- if st' == "\r" then gotcr else recvLine
+  return $ B.append st line
  where
   gotcr = do
     st <- recv 1
