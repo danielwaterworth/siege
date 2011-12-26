@@ -66,10 +66,8 @@ recvCommand = do
  where
   expectFirstChar :: Monad m => B.ByteString -> Char -> MaybeT m ()
   expectFirstChar line c =
-    if B.null line || (B.head line /= (fromIntegral $ ord c)) then
+    when (B.null line || (B.head line /= (fromIntegral $ ord c))) $ do
       MaybeT $ return Nothing
-    else
-      return ()
   recvCommand' = do
     line <- lift $ recvLine
     expectFirstChar line '*'
