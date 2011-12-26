@@ -38,7 +38,7 @@ import Debug.Trace.Monad
 
 -- The reason this isn't over the DBOperation monad as you might expect is that 
 -- it needs to be able to handle errors and to send them back to the client 
--- which would otherwise be possible.
+-- which wouldn't otherwise be possible.
 type NetworkOp r = ConnectionT (SharedStateT r (StoreT r (Node r) Identity))
 
 convert :: (Nullable r) => NetworkOp r () -> Socket -> FVar r -> (forall a. StoreT r (Node r) IO a -> IO a) -> IO ()
