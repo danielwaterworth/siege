@@ -4,6 +4,7 @@ module Database.Siege.Store where
 
 import Data.Map (Map)
 import qualified Data.Map as M
+import Control.Monad
 import Control.Monad.Trans
 import Database.Siege.Hash
 

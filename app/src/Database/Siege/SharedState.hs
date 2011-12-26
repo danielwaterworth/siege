@@ -3,6 +3,7 @@
 module Database.Siege.SharedState where
 
 import Control.Concurrent.MVar
+import Control.Monad
 import Control.Monad.Trans
 
 import Database.Siege.Flushable
