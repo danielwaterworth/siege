@@ -8,10 +8,27 @@ Maintainer:          Da.Waterworth@gmail.com
 Category:            Database
 Build-type:          Simple
 Extra-source-files:  README.md
-Cabal-version:       >=1.2
+Cabal-version:       >=1.8
 
-Executable disk
-  build-depends: base, bytestring, unix, directory, binary, mtl, transformers, 
-                 SHA, enumerator, hex, containers, network, random
-  hs-source-dirs: app/src
-  Main-is: disk.hs
+Executable siege-disk
+  hs-source-dirs:    app/src
+  build-depends:     base, bytestring, unix, directory, binary, mtl, 
+                     transformers, SHA, enumerator, hex, containers, network, 
+                     random
+  Main-is:           disk.hs
+
+Library
+  include-dirs:      /usr/include/zookeeper, app/src/Database/Zookeeper
+  extra-libraries:   zookeeper_mt
+  build-tools:       hsc2hs
+  build-depends:     base >= 3 && < 5, unix, filepath
+  exposed-modules:   Database.Zookeeper.Core
+  C-Sources:         app/src/Database/Zookeeper/consts.c
+  hs-source-dirs:    app/src
+
+Executable siege-distributed
+  build-depends:     base, bytestring, unix, directory, binary, mtl, 
+                     transformers, SHA, enumerator, hex, containers, network, 
+                     random, redis, siege
+  hs-source-dirs:    app/src
+  Main-is:           main.hs

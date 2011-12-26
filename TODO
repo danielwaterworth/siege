@@ -6,4 +6,3 @@
 * explicit disk caching,
 
 * allow multiple redis backends
-* write iteratee base recvLine

@@ -1,8 +1,4 @@
-{-# INCLUDE <zookeeper.h> #-}
-{-# INCLUDE "consts.h" #-}
-{-# LINE 1 "Zookeeper/Core.hsc" #-}
 {- Copyright 2011, John Billings <john@monkeynut.org>.
-{-# LINE 2 "Zookeeper/Core.hsc" #-}
    All rights reserved.
 
    Redistribution and use in source and binary forms, with or without
@@ -36,7 +32,7 @@
 -- | Some documentation talking about the state transitions.
 --   <http://hadoop.apache.org/zookeeper/docs/current/zookeeperProgrammers.html#ch_zkSessions>
 
-module Zookeeper.Core
+module Database.Zookeeper.Core
   ( -- * Errors
     ZException(..)
   , SystemError(..)
@@ -93,10 +89,8 @@ module Zookeeper.Core
   , getAcl, setAcl
   ) where
 
-
-{-# LINE 93 "Zookeeper/Core.hsc" #-}
-
-{-# LINE 94 "Zookeeper/Core.hsc" #-}
+#include <zookeeper.h>
+#include "consts.h"
 
 import Prelude hiding ( id, init )
 import Foreign.Ptr
@@ -313,50 +307,28 @@ instance Exception SessionMoved where
 
 check :: CInt -> IO ()
 check n = case n of
-  (0) -> return ()
-{-# LINE 311 "Zookeeper/Core.hsc" #-}
-  (-1) -> throw SystemError
-{-# LINE 312 "Zookeeper/Core.hsc" #-}
-  (-2) -> throw RuntimeInconsistency
-{-# LINE 313 "Zookeeper/Core.hsc" #-}
-  (-3) -> throw DataInconsistency
-{-# LINE 314 "Zookeeper/Core.hsc" #-}
-  (-4) -> throw ConnectionLoss
-{-# LINE 315 "Zookeeper/Core.hsc" #-}
-  (-5) -> throw MarshallingError
-{-# LINE 316 "Zookeeper/Core.hsc" #-}
-  (-6) -> throw Unimplemented
-{-# LINE 317 "Zookeeper/Core.hsc" #-}
-  (-7) -> throw OperationTimeout
-{-# LINE 318 "Zookeeper/Core.hsc" #-}
-  (-8) -> throw BadArguments
-{-# LINE 319 "Zookeeper/Core.hsc" #-}
-  (-9) -> throw InvalidState
-{-# LINE 320 "Zookeeper/Core.hsc" #-}
-  (-101) -> throw NoNode
-{-# LINE 321 "Zookeeper/Core.hsc" #-}
-  (-102) -> throw NoAuth
-{-# LINE 322 "Zookeeper/Core.hsc" #-}
-  (-103) -> throw BadVersion
-{-# LINE 323 "Zookeeper/Core.hsc" #-}
-  (-108) -> throw NoChildrenForEphemerals
-{-# LINE 324 "Zookeeper/Core.hsc" #-}
-  (-110) -> throw NodeExists
-{-# LINE 325 "Zookeeper/Core.hsc" #-}
-  (-111) -> throw NotEmpty
-{-# LINE 326 "Zookeeper/Core.hsc" #-}
-  (-112) -> throw SessionExpired
-{-# LINE 327 "Zookeeper/Core.hsc" #-}
-  (-113) -> throw InvalidCallback
-{-# LINE 328 "Zookeeper/Core.hsc" #-}
-  (-114) -> throw InvalidAcl
-{-# LINE 329 "Zookeeper/Core.hsc" #-}
-  (-115) -> throw AuthFailed
-{-# LINE 330 "Zookeeper/Core.hsc" #-}
-  (-116) -> throw Closing
-{-# LINE 331 "Zookeeper/Core.hsc" #-}
-  (-118) -> throw SessionMoved
-{-# LINE 332 "Zookeeper/Core.hsc" #-}
+  (#const ZOK                     ) -> return ()
+  (#const ZSYSTEMERROR            ) -> throw SystemError
+  (#const ZRUNTIMEINCONSISTENCY   ) -> throw RuntimeInconsistency
+  (#const ZDATAINCONSISTENCY      ) -> throw DataInconsistency
+  (#const ZCONNECTIONLOSS         ) -> throw ConnectionLoss
+  (#const ZMARSHALLINGERROR       ) -> throw MarshallingError
+  (#const ZUNIMPLEMENTED          ) -> throw Unimplemented
+  (#const ZOPERATIONTIMEOUT       ) -> throw OperationTimeout
+  (#const ZBADARGUMENTS           ) -> throw BadArguments
+  (#const ZINVALIDSTATE           ) -> throw InvalidState
+  (#const ZNONODE                 ) -> throw NoNode
+  (#const ZNOAUTH                 ) -> throw NoAuth
+  (#const ZBADVERSION             ) -> throw BadVersion
+  (#const ZNOCHILDRENFOREPHEMERALS) -> throw NoChildrenForEphemerals
+  (#const ZNODEEXISTS             ) -> throw NodeExists
+  (#const ZNOTEMPTY               ) -> throw NotEmpty
+  (#const ZSESSIONEXPIRED         ) -> throw SessionExpired
+  (#const ZINVALIDCALLBACK        ) -> throw InvalidCallback
+  (#const ZINVALIDACL             ) -> throw InvalidAcl
+  (#const ZAUTHFAILED             ) -> throw AuthFailed
+  (#const ZCLOSING                ) -> throw Closing
+  (#const ZSESSIONMOVED           ) -> throw SessionMoved
   _                                 -> error $ "Cannot match " ++ show n
 
 ifOk :: CInt -> IO a -> IO a
@@ -375,23 +347,15 @@ data LogLevel = Error
                 deriving ( Eq, Show )
 
 instance Enum LogLevel where
-  fromEnum Error = 1
-{-# LINE 351 "Zookeeper/Core.hsc" #-}
-  fromEnum Warn =  2
-{-# LINE 352 "Zookeeper/Core.hsc" #-}
-  fromEnum Info =  3
-{-# LINE 353 "Zookeeper/Core.hsc" #-}
-  fromEnum Debug = 4
-{-# LINE 354 "Zookeeper/Core.hsc" #-}
+  fromEnum Error = #const ZOO_LOG_LEVEL_ERROR
+  fromEnum Warn =  #const ZOO_LOG_LEVEL_WARN
+  fromEnum Info =  #const ZOO_LOG_LEVEL_INFO
+  fromEnum Debug = #const ZOO_LOG_LEVEL_DEBUG
 
-  toEnum (1) = Error
-{-# LINE 356 "Zookeeper/Core.hsc" #-}
-  toEnum (2) = Warn
-{-# LINE 357 "Zookeeper/Core.hsc" #-}
-  toEnum (3) = Info
-{-# LINE 358 "Zookeeper/Core.hsc" #-}
-  toEnum (4) = Debug
-{-# LINE 359 "Zookeeper/Core.hsc" #-}
+  toEnum (#const ZOO_LOG_LEVEL_ERROR) = Error
+  toEnum (#const ZOO_LOG_LEVEL_WARN ) = Warn
+  toEnum (#const ZOO_LOG_LEVEL_INFO ) = Info
+  toEnum (#const ZOO_LOG_LEVEL_DEBUG) = Debug
   toEnum unmatched = error ("LogLevel.toEnum: Cannot match " ++ show unmatched)
 
 
@@ -427,56 +391,33 @@ data Stat = Stat
   } deriving ( Eq, Show )
 
 instance Storable Stat where
-  sizeOf _ = (72)
-{-# LINE 395 "Zookeeper/Core.hsc" #-}
+  sizeOf _ = #{size struct Stat}
   poke p (Stat { czxid, mzxid, ctime, mtime, version, cversion, aversion
                , ephemeralOwner, dataLength, numChildren, pzxid }) act = do
-    (\hsc_ptr -> pokeByteOff hsc_ptr 0) p czxid
-{-# LINE 398 "Zookeeper/Core.hsc" #-}
-    (\hsc_ptr -> pokeByteOff hsc_ptr 8) p mzxid
-{-# LINE 399 "Zookeeper/Core.hsc" #-}
-    (\hsc_ptr -> pokeByteOff hsc_ptr 16) p ctime
-{-# LINE 400 "Zookeeper/Core.hsc" #-}
-    (\hsc_ptr -> pokeByteOff hsc_ptr 24) p mtime
-{-# LINE 401 "Zookeeper/Core.hsc" #-}
-    (\hsc_ptr -> pokeByteOff hsc_ptr 32) p version
-{-# LINE 402 "Zookeeper/Core.hsc" #-}
-    (\hsc_ptr -> pokeByteOff hsc_ptr 36) p cversion
-{-# LINE 403 "Zookeeper/Core.hsc" #-}
-    (\hsc_ptr -> pokeByteOff hsc_ptr 40) p aversion
-{-# LINE 404 "Zookeeper/Core.hsc" #-}
-    (\hsc_ptr -> pokeByteOff hsc_ptr 48) p ephemeralOwner
-{-# LINE 405 "Zookeeper/Core.hsc" #-}
-    (\hsc_ptr -> pokeByteOff hsc_ptr 56) p dataLength
-{-# LINE 406 "Zookeeper/Core.hsc" #-}
-    (\hsc_ptr -> pokeByteOff hsc_ptr 60) p numChildren
-{-# LINE 407 "Zookeeper/Core.hsc" #-}
-    (\hsc_ptr -> pokeByteOff hsc_ptr 64) p pzxid
-{-# LINE 408 "Zookeeper/Core.hsc" #-}
+    #{poke struct Stat, czxid         } p czxid
+    #{poke struct Stat, mzxid         } p mzxid
+    #{poke struct Stat, ctime         } p ctime
+    #{poke struct Stat, mtime         } p mtime
+    #{poke struct Stat, version       } p version
+    #{poke struct Stat, cversion      } p cversion
+    #{poke struct Stat, aversion      } p aversion
+    #{poke struct Stat, ephemeralOwner} p ephemeralOwner
+    #{poke struct Stat, dataLength    } p dataLength
+    #{poke struct Stat, numChildren   } p numChildren
+    #{poke struct Stat, pzxid         } p pzxid
     act
   peek p = do
-    czxid          <- (\hsc_ptr -> peekByteOff hsc_ptr 0) p
-{-# LINE 411 "Zookeeper/Core.hsc" #-}
-    mzxid          <- (\hsc_ptr -> peekByteOff hsc_ptr 8) p
-{-# LINE 412 "Zookeeper/Core.hsc" #-}
-    ctime          <- (\hsc_ptr -> peekByteOff hsc_ptr 16) p
-{-# LINE 413 "Zookeeper/Core.hsc" #-}
-    mtime          <- (\hsc_ptr -> peekByteOff hsc_ptr 24) p
-{-# LINE 414 "Zookeeper/Core.hsc" #-}
-    version        <- (\hsc_ptr -> peekByteOff hsc_ptr 32) p
-{-# LINE 415 "Zookeeper/Core.hsc" #-}
-    cversion       <- (\hsc_ptr -> peekByteOff hsc_ptr 36) p
-{-# LINE 416 "Zookeeper/Core.hsc" #-}
-    aversion       <- (\hsc_ptr -> peekByteOff hsc_ptr 40) p
-{-# LINE 417 "Zookeeper/Core.hsc" #-}
-    ephemeralOwner <- (\hsc_ptr -> peekByteOff hsc_ptr 48) p
-{-# LINE 418 "Zookeeper/Core.hsc" #-}
-    dataLength     <- (\hsc_ptr -> peekByteOff hsc_ptr 56) p
-{-# LINE 419 "Zookeeper/Core.hsc" #-}
-    numChildren    <- (\hsc_ptr -> peekByteOff hsc_ptr 60) p
-{-# LINE 420 "Zookeeper/Core.hsc" #-}
-    pzxid          <- (\hsc_ptr -> peekByteOff hsc_ptr 64) p
-{-# LINE 421 "Zookeeper/Core.hsc" #-}
+    czxid          <- #{peek struct Stat, czxid         } p
+    mzxid          <- #{peek struct Stat, mzxid         } p
+    ctime          <- #{peek struct Stat, ctime         } p
+    mtime          <- #{peek struct Stat, mtime         } p
+    version        <- #{peek struct Stat, version       } p
+    cversion       <- #{peek struct Stat, cversion      } p
+    aversion       <- #{peek struct Stat, aversion      } p
+    ephemeralOwner <- #{peek struct Stat, ephemeralOwner} p
+    dataLength     <- #{peek struct Stat, dataLength    } p
+    numChildren    <- #{peek struct Stat, numChildren   } p
+    pzxid          <- #{peek struct Stat, pzxid         } p
     return $ Stat { czxid, mzxid, ctime, mtime, version, cversion, aversion
                   , ephemeralOwner, dataLength, numChildren, pzxid }
 
@@ -486,8 +427,7 @@ instance Storable Stat where
  -------------------------------------------------------------------------------}
 
 instance Storable String where
-  sizeOf _ = (8)
-{-# LINE 431 "Zookeeper/Core.hsc" #-}
+  sizeOf _ = #{size void *}
   poke p str act =
     withCString str $ \q -> do
     S.poke (castPtr p :: Ptr CString) q
@@ -507,19 +447,14 @@ data Id = Id
   } deriving ( Eq, Show )
 
 instance Storable Id where
-  sizeOf _ = (16)
-{-# LINE 451 "Zookeeper/Core.hsc" #-}
+  sizeOf _ = #{size struct Id}
   poke p (Id { scheme, id }) act =
-    poke ((\hsc_ptr -> hsc_ptr `plusPtr` 0) p) scheme $
-{-# LINE 453 "Zookeeper/Core.hsc" #-}
-    poke ((\hsc_ptr -> hsc_ptr `plusPtr` 8) p) id     $
-{-# LINE 454 "Zookeeper/Core.hsc" #-}
+    poke (#{ptr struct Id, scheme} p) scheme $
+    poke (#{ptr struct Id, id    } p) id     $
     act
   peek p = do
-    scheme <- peek ((\hsc_ptr -> hsc_ptr `plusPtr` 0) p)
-{-# LINE 457 "Zookeeper/Core.hsc" #-}
-    id     <- peek ((\hsc_ptr -> hsc_ptr `plusPtr` 8) p)
-{-# LINE 458 "Zookeeper/Core.hsc" #-}
+    scheme <- peek (#{ptr struct Id, scheme} p)
+    id     <- peek (#{ptr struct Id, id    } p)
     return $ Id { scheme, id }
 
 foreign import ccall "consts.h const_anyone_id_unsafe"
@@ -551,31 +486,19 @@ data Perm = Read
                deriving ( Eq, Show, Bounded )
 
 instance Enum Perm where
-  fromEnum Read   = 1
-{-# LINE 490 "Zookeeper/Core.hsc" #-}
-  fromEnum Write  = 2
-{-# LINE 491 "Zookeeper/Core.hsc" #-}
-  fromEnum Create = 4
-{-# LINE 492 "Zookeeper/Core.hsc" #-}
-  fromEnum Delete = 8
-{-# LINE 493 "Zookeeper/Core.hsc" #-}
-  fromEnum Admin  = 16
-{-# LINE 494 "Zookeeper/Core.hsc" #-}
-  fromEnum All    = 31
-{-# LINE 495 "Zookeeper/Core.hsc" #-}
+  fromEnum Read   = #const ZOO_PERM_READ
+  fromEnum Write  = #const ZOO_PERM_WRITE
+  fromEnum Create = #const ZOO_PERM_CREATE
+  fromEnum Delete = #const ZOO_PERM_DELETE
+  fromEnum Admin  = #const ZOO_PERM_ADMIN
+  fromEnum All    = #const ZOO_PERM_ALL
 
-  toEnum (1) = Read
-{-# LINE 497 "Zookeeper/Core.hsc" #-}
-  toEnum (2) = Write
-{-# LINE 498 "Zookeeper/Core.hsc" #-}
-  toEnum (4) = Create
-{-# LINE 499 "Zookeeper/Core.hsc" #-}
-  toEnum (8) = Delete
-{-# LINE 500 "Zookeeper/Core.hsc" #-}
-  toEnum (16) = Admin
-{-# LINE 501 "Zookeeper/Core.hsc" #-}
-  toEnum (31) = All
-{-# LINE 502 "Zookeeper/Core.hsc" #-}
+  toEnum (#const ZOO_PERM_READ  ) = Read
+  toEnum (#const ZOO_PERM_WRITE ) = Write
+  toEnum (#const ZOO_PERM_CREATE) = Create
+  toEnum (#const ZOO_PERM_DELETE) = Delete
+  toEnum (#const ZOO_PERM_ADMIN ) = Admin
+  toEnum (#const ZOO_PERM_ALL   ) = All
   toEnum unmatched = error ("Perm.toEnum: Cannot match " ++ show unmatched)
 
 
@@ -589,22 +512,17 @@ data Acl = Acl
   } deriving ( Eq, Show )
 
 instance Storable Acl where
-  sizeOf _ = (24)
-{-# LINE 516 "Zookeeper/Core.hsc" #-}
+  sizeOf _ = #{size struct ACL}
   poke p (Acl { perms, aclId }) act = do
     let cPerms = foldr (.|.) 0 $ cFromEnum <$> perms :: CInt
-    (\hsc_ptr -> pokeByteOff hsc_ptr 0) p cPerms
-{-# LINE 519 "Zookeeper/Core.hsc" #-}
-    poke ((\hsc_ptr -> hsc_ptr `plusPtr` 8) p) aclId act
-{-# LINE 520 "Zookeeper/Core.hsc" #-}
+    #{poke struct ACL, perms} p cPerms
+    poke (#{ptr struct ACL, id} p) aclId act
   peek p = do
-    cPerms <- (\hsc_ptr -> peekByteOff hsc_ptr 0) p :: IO Int
-{-# LINE 522 "Zookeeper/Core.hsc" #-}
+    cPerms <- #{peek struct ACL, perms} p :: IO Int
     let allPerms = [ Read, Write, Create
                    , Delete, Admin, All ]
         perms    = filter (\q -> (fromEnum q) .&. cPerms == (fromEnum q)) allPerms
-    aclId <- peek $ (\hsc_ptr -> hsc_ptr `plusPtr` 8) p
-{-# LINE 526 "Zookeeper/Core.hsc" #-}
+    aclId <- peek $ #{ptr struct ACL, id} p
     return $ Acl { perms, aclId }
 
 
@@ -613,20 +531,15 @@ instance Storable Acl where
  -------------------------------------------------------------------------------}
 
 instance Storable [Acl] where
-  sizeOf _ = (16)
-{-# LINE 535 "Zookeeper/Core.hsc" #-}
+  sizeOf _ = #{size struct ACL_vector}
   poke p acls act = do
-    (\hsc_ptr -> pokeByteOff hsc_ptr 0) p (fromIntegral $ length acls :: Int32)
-{-# LINE 537 "Zookeeper/Core.hsc" #-}
+    #{poke struct ACL_vector, count} p (fromIntegral $ length acls :: Int32)
     allocaBytes (length acls * sizeOf (undefined :: Acl)) $ \q -> do
-    (\hsc_ptr -> pokeByteOff hsc_ptr 8) p q
-{-# LINE 539 "Zookeeper/Core.hsc" #-}
+    #{poke struct ACL_vector, data} p q
     pokeArray q acls act
   peek p = do
-    count <- (\hsc_ptr -> peekByteOff hsc_ptr 0) p :: IO Int32
-{-# LINE 542 "Zookeeper/Core.hsc" #-}
-    q <- (\hsc_ptr -> peekByteOff hsc_ptr 8) p
-{-# LINE 543 "Zookeeper/Core.hsc" #-}
+    count <- #{peek struct ACL_vector, count} p :: IO Int32
+    q <- #{peek struct ACL_vector, data} p
     peekArray (fromIntegral count) q
 
 foreign import ccall "consts.h const_open_acl_unsafe"
@@ -653,20 +566,15 @@ creatorAllAcl = unsafePerformIO $ peek (const_creator_all_acl)
  -------------------------------------------------------------------------------}
 
 instance Storable [String] where
-  sizeOf _ = (16)
-{-# LINE 570 "Zookeeper/Core.hsc" #-}
+  sizeOf _ = #{size struct String_vector}
   poke p strs act = do
-    (\hsc_ptr -> pokeByteOff hsc_ptr 0) p (fromIntegral $ length strs :: Int32)
-{-# LINE 572 "Zookeeper/Core.hsc" #-}
+    #{poke struct String_vector, count} p (fromIntegral $ length strs :: Int32)
     allocaBytes (length strs * S.sizeOf (undefined :: Ptr a)) $ \q -> do
-    (\hsc_ptr -> pokeByteOff hsc_ptr 8) p q
-{-# LINE 574 "Zookeeper/Core.hsc" #-}
+    #{poke struct String_vector, data} p q
     pokeArray q strs act
   peek p = do
-    count <- (\hsc_ptr -> peekByteOff hsc_ptr 0) p :: IO Int32
-{-# LINE 577 "Zookeeper/Core.hsc" #-}
-    q <- (\hsc_ptr -> peekByteOff hsc_ptr 8) p
-{-# LINE 578 "Zookeeper/Core.hsc" #-}
+    count <- #{peek struct String_vector, count} p :: IO Int32
+    q <- #{peek struct String_vector, data} p
     peekArray (fromIntegral count) q
 
 
@@ -682,15 +590,11 @@ data CreateFlag = Ephemeral  -- ^ The node only exists as long as the session th
                   deriving ( Eq, Show, Bounded )
 
 instance Enum CreateFlag where
-  fromEnum Ephemeral = 1
-{-# LINE 594 "Zookeeper/Core.hsc" #-}
-  fromEnum Sequence  = 2
-{-# LINE 595 "Zookeeper/Core.hsc" #-}
+  fromEnum Ephemeral = #const ZOO_EPHEMERAL
+  fromEnum Sequence  = #const ZOO_SEQUENCE
 
-  toEnum (1) = Ephemeral
-{-# LINE 597 "Zookeeper/Core.hsc" #-}
-  toEnum (2) = Sequence
-{-# LINE 598 "Zookeeper/Core.hsc" #-}
+  toEnum (#const ZOO_EPHEMERAL) = Ephemeral
+  toEnum (#const ZOO_SEQUENCE ) = Sequence
   toEnum unmatched = error ("Create.toEnum: Cannot match " ++ show unmatched)
 
 
@@ -707,27 +611,17 @@ data State = ExpiredSession
              deriving ( Eq, Show )
 
 instance Enum State where
-  fromEnum ExpiredSession  = -112
-{-# LINE 615 "Zookeeper/Core.hsc" #-}
-  fromEnum AuthFailedState = -113
-{-# LINE 616 "Zookeeper/Core.hsc" #-}
-  fromEnum Connecting      = 1
-{-# LINE 617 "Zookeeper/Core.hsc" #-}
-  fromEnum Associating     = 2
-{-# LINE 618 "Zookeeper/Core.hsc" #-}
-  fromEnum Connected       = 3
-{-# LINE 619 "Zookeeper/Core.hsc" #-}
+  fromEnum ExpiredSession  = #const ZOO_EXPIRED_SESSION_STATE
+  fromEnum AuthFailedState = #const ZOO_AUTH_FAILED_STATE
+  fromEnum Connecting      = #const ZOO_CONNECTING_STATE
+  fromEnum Associating     = #const ZOO_ASSOCIATING_STATE
+  fromEnum Connected       = #const ZOO_CONNECTED_STATE
 
-  toEnum (-112) = ExpiredSession
-{-# LINE 621 "Zookeeper/Core.hsc" #-}
-  toEnum (-113) = AuthFailedState
-{-# LINE 622 "Zookeeper/Core.hsc" #-}
-  toEnum (1) = Connecting
-{-# LINE 623 "Zookeeper/Core.hsc" #-}
-  toEnum (2) = Associating
-{-# LINE 624 "Zookeeper/Core.hsc" #-}
-  toEnum (3) = Connected
-{-# LINE 625 "Zookeeper/Core.hsc" #-}
+  toEnum (#const ZOO_EXPIRED_SESSION_STATE) = ExpiredSession
+  toEnum (#const ZOO_AUTH_FAILED_STATE    ) = AuthFailedState
+  toEnum (#const ZOO_CONNECTING_STATE     ) = Connecting
+  toEnum (#const ZOO_ASSOCIATING_STATE    ) = Associating
+  toEnum (#const ZOO_CONNECTED_STATE      ) = Connected
   toEnum unmatched = error ("State.toEnum: Cannot match " ++ show unmatched)
 
 
@@ -760,31 +654,19 @@ data Event
       deriving ( Eq, Show )
 
 instance Enum Event where
-  fromEnum Created     = 1
-{-# LINE 658 "Zookeeper/Core.hsc" #-}
-  fromEnum Deleted     = 2
-{-# LINE 659 "Zookeeper/Core.hsc" #-}
-  fromEnum Changed     = 3
-{-# LINE 660 "Zookeeper/Core.hsc" #-}
-  fromEnum Child       = 4
-{-# LINE 661 "Zookeeper/Core.hsc" #-}
-  fromEnum Session     = -1
-{-# LINE 662 "Zookeeper/Core.hsc" #-}
-  fromEnum NotWatching = -2
-{-# LINE 663 "Zookeeper/Core.hsc" #-}
+  fromEnum Created     = #const ZOO_CREATED_EVENT
+  fromEnum Deleted     = #const ZOO_DELETED_EVENT
+  fromEnum Changed     = #const ZOO_CHANGED_EVENT
+  fromEnum Child       = #const ZOO_CHILD_EVENT
+  fromEnum Session     = #const ZOO_SESSION_EVENT
+  fromEnum NotWatching = #const ZOO_NOTWATCHING_EVENT
 
-  toEnum (1) = Created
-{-# LINE 665 "Zookeeper/Core.hsc" #-}
-  toEnum (2) = Deleted
-{-# LINE 666 "Zookeeper/Core.hsc" #-}
-  toEnum (3) = Changed
-{-# LINE 667 "Zookeeper/Core.hsc" #-}
-  toEnum (4) = Child
-{-# LINE 668 "Zookeeper/Core.hsc" #-}
-  toEnum (-1) = Session
-{-# LINE 669 "Zookeeper/Core.hsc" #-}
-  toEnum (-2) = NotWatching
-{-# LINE 670 "Zookeeper/Core.hsc" #-}
+  toEnum (#const ZOO_CREATED_EVENT    ) = Created
+  toEnum (#const ZOO_DELETED_EVENT    ) = Deleted
+  toEnum (#const ZOO_CHANGED_EVENT    ) = Changed
+  toEnum (#const ZOO_CHILD_EVENT      ) = Child
+  toEnum (#const ZOO_SESSION_EVENT    ) = Session
+  toEnum (#const ZOO_NOTWATCHING_EVENT) = NotWatching
   toEnum unmatched = error ("Event.toEnum: Cannot match " ++ show unmatched)
 
 
@@ -808,22 +690,17 @@ data ClientId = ClientId
   } deriving ( Eq, Show )
 
 instance Storable ClientId where
-  sizeOf _ = (24)
-{-# LINE 694 "Zookeeper/Core.hsc" #-}
+  sizeOf _ = #{size clientid_t}
   poke p (ClientId { clientId, passwd }) act = do
     when (length passwd > 15) $
       error "ClientId.poke: password greater than 15 chars long"
-    (\hsc_ptr -> pokeByteOff hsc_ptr 0) p clientId
-{-# LINE 698 "Zookeeper/Core.hsc" #-}
+    #{poke clientid_t, client_id} p clientId
     withCStringLen passwd $ \(cPasswd, cPasswdLen) -> do
-      copyBytes ((\hsc_ptr -> hsc_ptr `plusPtr` 8) p) cPasswd cPasswdLen
-{-# LINE 700 "Zookeeper/Core.hsc" #-}
+      copyBytes (#{ptr clientid_t, passwd} p) cPasswd cPasswdLen
       act
   peek p = do
-    clientId <- (\hsc_ptr -> peekByteOff hsc_ptr 0) p :: IO Int64
-{-# LINE 703 "Zookeeper/Core.hsc" #-}
-    passwd   <- peekCString $ (\hsc_ptr -> hsc_ptr `plusPtr` 0) p
-{-# LINE 704 "Zookeeper/Core.hsc" #-}
+    clientId <- #{peek clientid_t, client_id} p :: IO Int64
+    passwd   <- peekCString $ #{ptr clientid_t, client_id} p
     return $ ClientId { clientId, passwd }
 
 
@@ -1148,15 +1025,12 @@ foreign import ccall "zookeeper.h zoo_wexists"
 exists :: Handle -> Path -> Maybe Watcher -> IO (Maybe Stat)
 exists (Handle h) path watcher =
   withCString path                $ \cPath   ->
-  allocaBytes (72) $ \cStat   -> do
-{-# LINE 1029 "Zookeeper/Core.hsc" #-}
+  allocaBytes #{size struct Stat} $ \cStat   -> do
   cWatcher <- liftWatcher watcher
   cErr     <- zoo_wexists h cPath cWatcher nullPtr cStat
-  if cErr == 0
-{-# LINE 1032 "Zookeeper/Core.hsc" #-}
+  if cErr == #{const ZOK}
     then Just <$> peek cStat
-    else if cErr == -101
-{-# LINE 1034 "Zookeeper/Core.hsc" #-}
+    else if cErr == #{const ZNONODE}
       then return Nothing
       else check cErr >> undefined
 
@@ -1188,10 +1062,8 @@ get (Handle h) path watcher =
   let bufLen = 1024 in
   withCString path                $ \cPath   ->
   allocaBytes bufLen              $ \cBuf    ->
-  allocaBytes (4)         $ \cBufLen ->
-{-# LINE 1066 "Zookeeper/Core.hsc" #-}
-  allocaBytes (72) $ \cStat   -> do
-{-# LINE 1067 "Zookeeper/Core.hsc" #-}
+  allocaBytes #{size int}         $ \cBufLen ->
+  allocaBytes #{size struct Stat} $ \cStat   -> do
   S.poke (cBufLen :: Ptr CInt) (cFromEnum bufLen)
   cWatcher <- liftWatcher watcher
   cErr     <- zoo_wget h cPath cWatcher nullPtr cBuf cBufLen cStat
@@ -1265,8 +1137,7 @@ set2 (Handle h) path value vers =
   let cVers = cFromEnum $ fromMaybe (-1) vers in
   withCString     path  $ \cPath               ->
   withCStringLen  value $ \(cValue, cValueLen) ->
-  allocaBytes (72) $ \cStat    -> do
-{-# LINE 1141 "Zookeeper/Core.hsc" #-}
+  allocaBytes #{size struct Stat} $ \cStat    -> do
   cErr <- zoo_set2 h cPath cValue (cFromEnum cValueLen) cVers cStat
   ifOk cErr $ peek cStat
 
@@ -1300,8 +1171,7 @@ getChildren :: Handle -> Path -> Maybe Watcher -> IO [String]
 getChildren (Handle h) path watcher =
   withCString path $ \cPath -> do
   cWatcher <- liftWatcher watcher
-  allocaBytes (16) $ \cStringVector -> do
-{-# LINE 1175 "Zookeeper/Core.hsc" #-}
+  allocaBytes #{size struct String_vector} $ \cStringVector -> do
   cErr <- zoo_wget_children h cPath cWatcher nullPtr cStringVector
   ifOk cErr $ peek cStringVector
 
@@ -1332,10 +1202,8 @@ getChildren2 :: Handle -> Path -> Maybe Watcher -> IO ([String], Stat)
 getChildren2 (Handle h) path watcher =
   withCString path $ \cPath -> do
   cWatcher <- liftWatcher watcher
-  allocaBytes (16) $ \cStringVector -> do
-{-# LINE 1206 "Zookeeper/Core.hsc" #-}
-  allocaBytes (72) $ \cStat -> do
-{-# LINE 1207 "Zookeeper/Core.hsc" #-}
+  allocaBytes #{size struct String_vector} $ \cStringVector -> do
+  allocaBytes #{size struct Stat         } $ \cStat -> do
   cErr <- zoo_wget_children2 h cPath cWatcher nullPtr cStringVector cStat
   ifOk cErr $ do
     stringVector <- peek cStringVector
@@ -1367,10 +1235,8 @@ foreign import ccall "zookeeper.h zoo_get_acl"
 getAcl :: Handle -> Path -> IO ([Acl], Stat)
 getAcl (Handle h) path =
   withCString path $ \cPath ->
-  allocaBytes (16) $ \cAcls ->
-{-# LINE 1239 "Zookeeper/Core.hsc" #-}
-  allocaBytes (72) $ \cStat -> do
-{-# LINE 1240 "Zookeeper/Core.hsc" #-}
+  allocaBytes #{size struct ACL_vector} $ \cAcls ->
+  allocaBytes #{size struct Stat      } $ \cStat -> do
   cErr <- zoo_get_acl h cPath cAcls cStat
   ifOk cErr $ do
     acls <- peek cAcls
@@ -1407,8 +1273,7 @@ setAcl :: Handle -> Path -> Maybe Int -> [Acl] -> IO ()
 setAcl (Handle h) path vers acls =
   let cVers = cFromEnum $ fromMaybe (-1) vers in
   withCString path $ \cPath ->
-  allocaBytes (16) $ \cAcls ->
-{-# LINE 1277 "Zookeeper/Core.hsc" #-}
+  allocaBytes #{size struct ACL_vector} $ \cAcls ->
   poke cAcls acls $ do
   cErr <- zoo_set_acl h cPath cVers cAcls
   ifOk cErr $ return ()

@@ -1,22 +1,23 @@
 import Prelude hiding (null)
-import Nullable
+import Data.Nullable
 
 import Data.Maybe
-import Zookeeper.Core as Z
+import Database.Zookeeper.Core as Z
 import Database.Redis.Redis
 import Database.Redis.ByteStringClass
-import Flushable
-import DBNode (Ref)
-import qualified DBNode as N
 import Control.Concurrent
 import Control.Concurrent.MVar
 import Control.Monad
-import NetworkProtocol
-import Connection
-import NetworkHelper
-import StringHelper
-import Store
-import DoStore
+
+import qualified Database.Siege.DBNode as N
+import Database.Siege.Flushable
+import Database.Siege.DBNode (Ref)
+import Database.Siege.NetworkProtocol
+import Database.Siege.Connection
+import Database.Siege.NetworkHelper
+import Database.Siege.StringHelper
+import Database.Siege.Store
+import Database.Siege.DoStore
 
 initZookeeper = do
   Z.setLogLevel Z.Error
@@ -25,17 +26,12 @@ initZookeeper = do
   when (isNothing exists) $ do
     (acl, _) <- Z.getAcl zk "/"
     Z.create zk "/head" (bToSt $ N.unRef empty) [] acl
+    return ()
   return zk
 
 initRedis = do
   redis <- connect localhost defaultPort
-  redisvar <- newMVar redis
-  let redis = (\fn -> do
-        redis <- takeMVar redisvar
-        out <- fn redis
-        putMVar redisvar redis
-        return out)
-  return redis
+  newMVar redis
 
 main :: IO ()
 main = do
@@ -48,4 +44,4 @@ main = do
     Z.set zk "/head" (bToSt $ N.unRef head) Nothing) var
   listenAt 4050 (\sock -> do
     print "new socket [="
-    convert protocol sock var (withRedis [redis] . cache))
+    convert protocol sock var (withRedis [withMVar redis] . cache))
