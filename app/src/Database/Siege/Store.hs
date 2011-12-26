@@ -30,14 +30,10 @@ instance Monad m => Monad (StoreT k v m) where
       Store v c -> return $ Store v (\i -> c i >>= f)
 
 instance MonadTrans (StoreT k v) where
-  lift m = StoreT $ do
-    v <- m
-    return $ Done v
+  lift m = StoreT $ liftM Done m
 
 instance MonadIO m => MonadIO (StoreT k v m) where
-  liftIO m = StoreT $ do
-    v <- liftIO m
-    return $ Done v
+  liftIO m = StoreT $ liftM Done (liftIO m)
 
 get k = StoreT $ return $ Get k return
 store v = StoreT $ return $ Store v return

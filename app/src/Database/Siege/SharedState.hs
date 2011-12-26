@@ -26,14 +26,10 @@ instance Monad m => Monad (SharedStateT s m) where
       Get c -> return $ Get (\i -> c i >>= f)
 
 instance MonadTrans (SharedStateT s) where
-  lift m = SharedStateT $ do
-    v <- m
-    return $ Done v
+  lift m = SharedStateT $ liftM Done m
 
 instance MonadIO m => MonadIO (SharedStateT s m) where
-  liftIO m = SharedStateT $ do
-    v <- liftIO m
-    return $ Done v
+  liftIO m = SharedStateT $ liftM Done (liftIO m)
 
 alter :: Monad m => (s -> m (s, x)) -> SharedStateT s m x
 alter = SharedStateT . return . flip Alter return

@@ -46,9 +46,7 @@ convert op sock var fn =
       stage2 = withFVar var . Sh.monadChange stage3
       stage3 = fn . St.monadChange stage4
       stage4 = return . runIdentity in
-        stage1 $ do
-          op
-          return ()
+        stage1 $ op
 
 maybeRead :: Read a => String -> Maybe a
 maybeRead = fmap fst . listToMaybe . reads
