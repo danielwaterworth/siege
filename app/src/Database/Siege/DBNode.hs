@@ -1,5 +1,3 @@
-{-# LANGUAGE DoAndIfThenElse #-}
-
 module Database.Siege.DBNode where
 
 import Prelude hiding (null)
@@ -74,7 +72,7 @@ unlabel label ref =
         throwError TypeError
 
 getLabel :: (Monad m, Nullable r) => r -> RawDBOperation r m (Maybe (B.ByteString, r))
-getLabel ref = do
+getLabel ref =
   if null ref then 
     return Nothing
   else do
