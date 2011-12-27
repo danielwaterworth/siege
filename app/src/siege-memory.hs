@@ -7,12 +7,9 @@ import Data.Nullable
 
 import Data.Maybe
 
-import Control.Concurrent
 import Control.Monad
-import Control.Monad.Trans.Error
-import System.IO
+import Control.Concurrent
 
-import Database.Siege.StringHelper
 import Database.Siege.Flushable
 import Database.Siege.NetworkProtocol
 import Database.Siege.NetworkHelper
@@ -20,10 +17,8 @@ import Database.Siege.NetworkHelper
 import Database.Siege.Store
 
 import Database.Siege.DBNode (Node)
-import Database.Siege.DBNodeBinary
 
 import Data.Int
-import Data.Binary as Bin
 import qualified Data.ByteString as B
 
 import Database.Siege.StringHelper
