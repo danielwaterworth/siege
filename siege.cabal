@@ -15,7 +15,7 @@ Executable siege-disk
   build-depends:     base, bytestring, unix, directory, binary, mtl, 
                      transformers, SHA, enumerator, hex, containers, network, 
                      random
-  Main-is:           disk.hs
+  Main-is:           siege-disk.hs
 
 Library
   include-dirs:      /usr/include/zookeeper, app/src/Database/Zookeeper
@@ -31,4 +31,4 @@ Executable siege-distributed
                      transformers, SHA, enumerator, hex, containers, network, 
                      random, redis, siege
   hs-source-dirs:    app/src
-  Main-is:           main.hs
+  Main-is:           siege-distributed.hs
