@@ -31,7 +31,7 @@ instance Nullable MemoryRef where
   empty = MemoryRef Nothing
   null = isNothing . unRef
 
-reduceStore :: StoreT MemoryRef (Node MemoryRef) IO a -> IO a
+reduceStore :: (Monad m) => StoreT MemoryRef (Node MemoryRef) m a -> m a
 reduceStore op = do
   v <- runStoreT op
   case v of
