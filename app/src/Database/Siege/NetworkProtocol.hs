@@ -23,6 +23,7 @@ import Database.Siege.Connection as C
 import Database.Siege.SharedState as Sh
 import Database.Siege.Store (StoreT(..), cache)
 import qualified Database.Siege.Store as St
+import qualified Database.Siege.Recv as R
 import Database.Siege.DBNode (Ref, Node, DBError)
 import qualified Database.Siege.DBNode as N
 import qualified Database.Siege.DBMap as M
@@ -49,41 +50,15 @@ convert op sock var fn =
       stage4 = return . runIdentity in
         stage1 $ op
 
-maybeRead :: Read a => String -> Maybe a
-maybeRead = fmap fst . listToMaybe . reads
-
-applyReversed fn = reverse . fn . reverse
-
 recvCommand :: (Nullable r) => NetworkOp r [Maybe B.ByteString]
 recvCommand = do
-  v <- runMaybeT recvCommand'
+  v <- C.recvI R.recvCommand
   case v of
     Nothing -> do
       C.send $ stToB "protocol error\r\n"
       C.close
     Just v' ->
       return v'
- where
-  expectFirstChar :: Monad m => B.ByteString -> Char -> MaybeT m ()
-  expectFirstChar line c =
-    when (B.null line || (B.head line /= (fromIntegral $ ord c))) $ do
-      MaybeT $ return Nothing
-  recvCommand' = do
-    line <- lift $ recvLine
-    expectFirstChar line '*'
-    n <- MaybeT $ return $ ((maybeRead . applyReversed (drop 2) . tail . bToSt) line :: Maybe Int)
-    replicateM n $ do
-      line <- lift $ recvLine
-      expectFirstChar line '$'
-      m <- MaybeT $ return $ ((maybeRead . applyReversed (drop 2) . tail . bToSt) line :: Maybe Int)
-      if m >= 0 then do
-        dat <- lift $ recv m
-        lift $ recv 2
-        return $ Just dat
-      else if m == -1 then
-        return Nothing
-      else
-        MaybeT $ return Nothing
 
 performAlter :: (Nullable r) => (r -> DBOperation r (a, r)) -> NetworkOp r (Either DBError a)
 performAlter op =
