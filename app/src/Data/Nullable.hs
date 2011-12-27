@@ -2,13 +2,11 @@ module Data.Nullable where
 
 import Prelude hiding (null)
 
+import Data.Maybe
 import qualified Data.ByteString as B
-
 import qualified Data.List as List
-
 import Data.Set (Set)
 import qualified Data.Set as Set
-
 import Data.Map (Map)
 import qualified Data.Map as Map
 
@@ -22,8 +20,7 @@ instance Nullable B.ByteString where
 
 instance Nullable (Maybe m) where
   empty = Nothing
-  null Nothing = True
-  null _ = False
+  null = isNothing
 
 instance Nullable (Map k v) where
   empty = Map.empty
