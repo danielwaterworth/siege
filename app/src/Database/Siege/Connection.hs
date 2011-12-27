@@ -88,3 +88,4 @@ withSocket sock op =
           doRecv [] s $ c (E.Chunks [o])
       E.Yield o (E.Chunks d) ->
         return (o, d)
+      E.Error err -> (error . show) err -- TODO: fixme properly
