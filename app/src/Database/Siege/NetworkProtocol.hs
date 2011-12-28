@@ -44,11 +44,11 @@ type NetworkOp r = ConnectionT (SharedStateT r (StoreT r (Node r) Identity))
 
 convert :: (Nullable r) => NetworkOp r () -> Socket -> FVar r -> (forall a. StoreT r (Node r) IO a -> IO a) -> IO ()
 convert op sock var fn =
-  let stage1 = (withSocket sock) . hoist stage2
+  let stage1 = withSocket sock . hoist stage2
       stage2 = withFVar var . hoist stage3
       stage3 = fn . hoist stage4
       stage4 = return . runIdentity in
-        stage1 $ op
+        stage1 op
 
 recvCommand :: (Nullable r) => NetworkOp r [Maybe B.ByteString]
 recvCommand = do
