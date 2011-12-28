@@ -18,6 +18,9 @@ instance Nullable Ref where
   empty = Ref . B.pack $ take 20 $ repeat 0
   null = (== empty)
 
+validRef :: Ref -> Bool
+validRef = (== 20) . B.length . unRef
+
 data Node r =
   Branch [(Word8, r)] |
   Shortcut B.ByteString r |
@@ -28,15 +31,12 @@ data Node r =
 
 data DBError =
   TypeError |
-  OtherError
+  OtherError deriving (Eq)
 
 instance Error DBError where
   noMsg = OtherError
 
 type RawDBOperation r m = ErrorT DBError (StoreT r (Node r) m)
-
-validRef :: Ref -> Bool
-validRef = (== 20) . B.length . unRef
 
 createValue :: (Monad m, Nullable r) => B.ByteString -> RawDBOperation r m r
 createValue dat =

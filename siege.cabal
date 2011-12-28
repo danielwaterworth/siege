@@ -12,19 +12,27 @@ Cabal-version:       >=1.8
 
 -- TODO: put the bulk of the files in a library that is reused
 
+Test-Suite siege-test
+  build-depends:     base, bytestring, unix, directory, binary, mtl, 
+                     transformers, SHA, enumerator, hex, containers, network, 
+                     random, redis, siege, QuickCheck
+  hs-source-dirs:    app/testsuite, app/src
+  type:              exitcode-stdio-1.0
+  main-is:           test.hs
+
 Executable siege-disk
   hs-source-dirs:    app/src
   build-depends:     base, bytestring, unix, directory, binary, mtl, 
                      transformers, SHA, enumerator, hex, containers, network, 
                      random
-  Main-is:           siege-disk.hs
+  main-is:           siege-disk.hs
 
 Executable siege-memory
   hs-source-dirs:    app/src
   build-depends:     base, bytestring, unix, directory, binary, mtl, 
                      transformers, SHA, enumerator, hex, containers, network, 
                      random
-  Main-is:           siege-memory.hs
+  main-is:           siege-memory.hs
 
 Library
   include-dirs:      /usr/include/zookeeper, app/src/Database/Zookeeper
@@ -40,4 +48,5 @@ Executable siege-distributed
                      transformers, SHA, enumerator, hex, containers, network, 
                      random, redis, siege
   hs-source-dirs:    app/src
-  Main-is:           siege-distributed.hs
+  main-is:           siege-distributed.hs
+

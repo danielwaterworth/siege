@@ -23,23 +23,7 @@ import qualified Data.ByteString as B
 
 import Database.Siege.StringHelper
 
-newtype MemoryRef = MemoryRef {
-  unRef :: Maybe (Node MemoryRef)
-}
-
-instance Nullable MemoryRef where
-  empty = MemoryRef Nothing
-  null = isNothing . unRef
-
-reduceStore :: (Monad m) => StoreT MemoryRef (Node MemoryRef) m a -> m a
-reduceStore op = do
-  v <- runStoreT op
-  case v of
-    Done a -> return a
-    Get k c -> do
-      reduceStore $ c $ fromJust $ unRef k
-    Store v c -> do
-      reduceStore $ c $ MemoryRef $ Just v
+import Database.Siege.Memory
 
 main = do
   var <- newFVar $ MemoryRef Nothing
