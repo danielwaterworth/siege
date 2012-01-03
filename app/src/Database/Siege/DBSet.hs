@@ -17,13 +17,16 @@ import qualified Data.ByteString as B
 import Control.Monad
 import Control.Monad.Trans
 import Control.Monad.Trans.Maybe
+import Control.Monad.Trans.Error
 
 import Database.Siege.DBNode as N
 import Database.Siege.DBTree as T
 import Database.Siege.Hash
 import Database.Siege.IterateeTrans
 
-ident = B.pack $ map (fromIntegral . ord) "Set"
+import Database.Siege.StringHelper
+
+ident = stToB "Set"
 
 insert ref item = do
   ref' <- unlabel ident ref
@@ -53,7 +56,7 @@ exists ref item = do
         else
           (error . show) ("wooh, key collision ", item, item')
       _ ->
-        (error . show) ("this shouldn't be here")
+        throwError TypeError
 
 iterate :: (Monad m, Nullable r) => r -> E.Enumerator B.ByteString (RawDBOperation r m) a
 iterate ref i = do

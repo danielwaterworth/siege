@@ -13,6 +13,7 @@ import qualified Data.Enumerator.List as EL
 import Control.Monad
 import Control.Monad.Trans
 import Control.Monad.Trans.Maybe
+import Control.Monad.Trans.Error
 
 import Data.Maybe
 import Data.Char
@@ -51,7 +52,7 @@ lookup ref key = do
         else
           (error . show) ("wooh, key collision ", key, key')
       _ ->
-        (error . show) ("this shouldn't be here")
+        throwError TypeError
 
 delete :: (Monad m, Nullable r) => r -> B.ByteString -> RawDBOperation r m r
 delete ref key = do

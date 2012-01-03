@@ -25,10 +25,18 @@ import Database.Siege.Store
 import Database.Siege.DBNode (Ref, Node(..), RawDBOperation, DBError(..))
 import qualified Database.Siege.DBNode as N
 
+-- TODO:
+--    - Seeing as the operations performed on the hashes are head and tail, 
+--      it's probably more efficient to use a [Word8] instead.
+--    - It's always the case that some data is hashed and then that hash is 
+--      used for the position, modify the functions to do their own hashing.
+
 lookup :: (Monad m, Nullable r) => r -> B.ByteString -> RawDBOperation r m r
 lookup ref h =
+  -- if the hash is null, then the leaf has been reached
   if null h then
     return ref
+  -- if the reference is null, then the map is empty
   else if null ref then
     return empty
   else do
@@ -84,7 +92,6 @@ insert ref h item =
       _ ->
         throwError TypeError
 
--- TODO: collapse a branch and a shortcut to a single shortcut
 delete :: (Monad m, Nullable r) => r -> B.ByteString -> RawDBOperation r m r
 delete ref h =
   if null h then
