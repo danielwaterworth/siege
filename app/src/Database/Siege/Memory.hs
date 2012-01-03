@@ -24,10 +24,8 @@ reduceStore op = do
   v <- runStoreT op
   case v of
     Done a -> return a
-    Get k c -> do
-      reduceStore $ c $ fromJust $ unRef k
-    Store v c -> do
-      reduceStore $ c $ MemoryRef $ Just v
+    Get k c -> (reduceStore . c . fromJust . unRef) k
+    Store v c -> (reduceStore . c . MemoryRef . Just) v
 
 testRawDBOperation :: RawDBOperation MemoryRef Identity Bool -> Bool
 testRawDBOperation = (== Right True) . runIdentity . reduceStore . runErrorT
