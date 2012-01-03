@@ -1,4 +1,4 @@
-module Database.Siege.IterateeTrans where
+module Data.Enumerator.Hoist where
 
 import Control.Monad.Hoist
 import qualified Data.Enumerator as E
@@ -10,4 +10,3 @@ instance MonadHoist (E.Iteratee a) where
       E.Continue c -> return $ E.Continue ((hoist f) . c)
       E.Yield b s -> return $ E.Yield b s
       E.Error e -> return $ E.Error e
-

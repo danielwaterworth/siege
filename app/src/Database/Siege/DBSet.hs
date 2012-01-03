@@ -9,6 +9,7 @@ import Database.Siege.Store
 
 import qualified Data.Enumerator as E
 import qualified Data.Enumerator.List as EL
+import Data.Enumerator.Hoist
 
 import Data.Maybe
 import Data.Char
@@ -21,7 +22,6 @@ import Control.Monad.Trans.Error
 
 import Database.Siege.DBNode as N
 import Database.Siege.DBTree as T
-import Database.Siege.IterateeTrans
 
 import Database.Siege.StringHelper
 

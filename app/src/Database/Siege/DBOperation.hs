@@ -12,14 +12,13 @@ import Control.Monad.Hoist
 import Control.Monad.Trans
 
 import qualified Data.Enumerator as E
+import Data.Enumerator.Hoist
 
 import qualified Database.Siege.DBMap as Map
 import qualified Database.Siege.DBSet as Set
 import qualified Database.Siege.Store as S
 import Database.Siege.DBNode (Ref, Node, RawDBOperation)
 import qualified Database.Siege.DBNode as N
-
-import Database.Siege.IterateeTrans
 
 data NodeType =
   Map |

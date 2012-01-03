@@ -7,7 +7,7 @@ import Data.List
 import qualified Data.ByteString as B
 import qualified Data.ByteString.Lazy as L
 import qualified Data.Enumerator as E
-import qualified Database.Siege.IterateeTrans as I
+import Data.Enumerator.Hoist
 import Control.Monad
 import Control.Monad.Hoist
 import Control.Concurrent
