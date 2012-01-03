@@ -25,117 +25,122 @@ import Database.Siege.Store
 import Database.Siege.DBNode (Ref, Node(..), RawDBOperation, DBError(..))
 import qualified Database.Siege.DBNode as N
 
--- TODO:
---    - Seeing as the operations performed on the hashes are head and tail, 
---      it's probably more efficient to use a [Word8] instead.
---    - It's always the case that some data is hashed and then that hash is 
---      used for the position, modify the functions to do their own hashing.
+import Database.Siege.Hash
 
 lookup :: (Monad m, Nullable r) => r -> B.ByteString -> RawDBOperation r m r
 lookup ref h =
-  -- if the hash is null, then the leaf has been reached
-  if null h then
-    return ref
-  -- if the reference is null, then the map is empty
-  else if null ref then
-    return empty
-  else do
-    node <- lift $ get ref
-    case node of
-      Branch options -> do
-        let option = find (\(c, _) -> c == B.head h) options in
-          case option of
-            Just (_, r) -> lookup r $ B.tail h
-            Nothing -> return empty
-      Shortcut h' item' -> do
-        if h' == h then
-          return item'
-        else
-          return empty
-      _ ->
-        throwError TypeError
+  lookup' ref (B.unpack $ stHash h)
+ where
+  lookup' ref h =
+    -- if the hash is null, then the leaf has been reached
+    if null h then
+      return ref
+    -- if the reference is null, then the map is empty
+    else if null ref then
+      return empty
+    else do
+      node <- lift $ get ref
+      case node of
+        Branch options -> do
+          let option = find (\(c, _) -> c == head h) options in
+            case option of
+              Just (_, r) -> lookup' r $ tail h
+              Nothing -> return empty
+        Shortcut h' item' -> do
+          if h' == (B.pack h) then
+            return item'
+          else
+            return empty
+        _ ->
+          throwError TypeError
 
 insert :: (Monad m, Nullable r) => r -> B.ByteString -> r -> RawDBOperation r m r
 insert ref h item =
-  if null h then
-    return item
-  else if null ref then do
-    lift $ store $ Shortcut h item
-  else do
-    node <- lift $ get ref
-    case node of
-      Branch options -> do
-        let option = find (\(c, _) -> c == B.head h) options in
-          case option of
-            Just (_, r) -> do
-              ref <- insert r (B.tail h) item
-              let options' = filter (\(c, _) -> c /= B.head h) options
-              let options'' = (B.head h, ref):options'
-              lift $ store $ Branch options''
-            Nothing -> do
-              ref <- insert empty (B.tail h) item
-              let options' = (B.head h, ref):options
-              lift $ store $ Branch options'
-      Shortcut path item' -> do
-        if path == h then
-          lift $ store $ Shortcut path item
-        else
-          let construct ah ai bh bi =
-                if B.head ah == B.head bh then do
-                  b' <- construct (B.tail ah) ai (B.tail bh) bi
-                  lift $ store $ Branch [(B.head ah, b')]
-                else do
-                  a <- insert empty (B.tail ah) ai
-                  b <- insert empty (B.tail bh) bi
-                  lift $ store $ Branch [(B.head ah, a), (B.head bh, b)] in
-                    construct path item' h item
-      _ ->
-        throwError TypeError
+  insert' ref (B.unpack $ stHash h) item
+ where
+  insert' ref h item =
+    if null h then
+      return item
+    else if null ref then do
+      lift $ store $ Shortcut (B.pack h) item
+    else do
+      node <- lift $ get ref
+      case node of
+        Branch options -> do
+          let option = find (\(c, _) -> c == head h) options in
+            case option of
+              Just (_, r) -> do
+                ref <- insert' r (tail h) item
+                let options' = filter (\(c, _) -> c /= head h) options
+                let options'' = (head h, ref):options'
+                lift $ store $ Branch options''
+              Nothing -> do
+                ref <- insert' empty (tail h) item
+                let options' = (head h, ref):options
+                lift $ store $ Branch options'
+        Shortcut path item' -> do
+          if path == (B.pack h) then
+            lift $ store $ Shortcut path item
+          else
+            let construct ah ai bh bi =
+                  if head ah == head bh then do
+                    b' <- construct (tail ah) ai (tail bh) bi
+                    lift $ store $ Branch [(head ah, b')]
+                  else do
+                    a <- insert' empty (tail ah) ai
+                    b <- insert' empty (tail bh) bi
+                    lift $ store $ Branch [(head ah, a), (head bh, b)] in
+                      construct (B.unpack path) item' h item
+        _ ->
+          throwError TypeError
 
 delete :: (Monad m, Nullable r) => r -> B.ByteString -> RawDBOperation r m r
 delete ref h =
-  if null h then
-    return empty
-  else if null ref then
-    return empty
-  else do
-    node <- lift $ get ref
-    case node of
-      Branch options -> do
-        let option = find (\(c, _) -> c == B.head h) options in
-          case option of
-            Just (_, r) -> do
-              ref <- delete r (B.tail h)
-              let options' = filter (\(c, _) -> c /= B.head h) options
-              if null ref then
-                createBranch options'
-              else do
-                let options'' = (B.head h, ref):options'
-                createBranch options''
-            Nothing ->
-              return ref
-      Shortcut path item -> do
-        if path == h then
-          return empty
-        else
-          return ref
-      _ ->
-        throwError TypeError
+  delete' ref (B.unpack $ stHash h)
  where
-  createBranch options = do
-    if null options then
+  delete' ref h =
+    if null h then
       return empty
-    else if length options == 1 then do
-      let ref = (snd . head) options
+    else if null ref then
+      return empty
+    else do
       node <- lift $ get ref
       case node of
+        Branch options -> do
+          let option = find (\(c, _) -> c == head h) options in
+            case option of
+              Just (_, r) -> do
+                ref <- delete' r (tail h)
+                let options' = filter (\(c, _) -> c /= head h) options
+                if null ref then
+                  createBranch options'
+                else do
+                  let options'' = (head h, ref):options'
+                  createBranch options''
+              Nothing ->
+                return ref
         Shortcut path item -> do
-          let path' = B.cons (fst $ head options) path
-          lift $ store $ Shortcut path' item
-        _ -> do
-          lift $ store $ Branch options
-    else
-      lift $ store $ Branch options
+          if path == (B.pack h) then
+            return empty
+          else
+            return ref
+        _ ->
+          throwError TypeError
+   where
+    createBranch options = do
+      if null options then
+        return empty
+      else if length options == 1 then do
+        let ref = (snd . head) options
+        node <- lift $ get ref
+        case node of
+          Shortcut path item -> do
+            let path' = B.cons (fst $ head options) path
+            lift $ store $ Shortcut path' item
+          _ -> do
+            lift $ store $ Branch options
+      else
+        lift $ store $ Branch options
 
 iterate :: (Monad m, Nullable r) => r -> E.Enumerator r (RawDBOperation r m) a
 iterate =

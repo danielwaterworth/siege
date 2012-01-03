@@ -22,7 +22,6 @@ import qualified Data.ByteString as B
 import Database.Siege.DBNode (Ref, Node(..), RawDBOperation, DBError(..))
 import qualified Database.Siege.DBNode as N
 import Database.Siege.DBTree as T
-import Database.Siege.Hash
 
 import Database.Siege.StringHelper
 
@@ -31,16 +30,14 @@ ident = stToB "Map"
 insert :: (Monad m, Nullable r) => r -> B.ByteString -> r -> RawDBOperation r m r
 insert ref key item = do
   ref' <- N.unlabel ident ref
-  let h = stHash key
   item' <- N.createLabel key item
-  ref'' <- T.insert ref' h item'
+  ref'' <- T.insert ref' key item'
   N.createLabel ident ref''
 
 lookup :: (Monad m, Nullable r) => r -> B.ByteString -> RawDBOperation r m r
 lookup ref key = do
   ref' <- N.unlabel ident ref
-  let h = stHash key
-  ref'' <- T.lookup ref' h
+  ref'' <- T.lookup ref' key
   if null ref'' then
     return empty
   else do
@@ -57,8 +54,7 @@ lookup ref key = do
 delete :: (Monad m, Nullable r) => r -> B.ByteString -> RawDBOperation r m r
 delete ref key = do
   ref' <- N.unlabel ident ref
-  let h = stHash key
-  ref'' <- T.delete ref' h
+  ref'' <- T.delete ref' key
   if null ref'' then
     return empty
   else

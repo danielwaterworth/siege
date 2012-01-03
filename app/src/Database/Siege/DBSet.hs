@@ -21,7 +21,6 @@ import Control.Monad.Trans.Error
 
 import Database.Siege.DBNode as N
 import Database.Siege.DBTree as T
-import Database.Siege.Hash
 import Database.Siege.IterateeTrans
 
 import Database.Siege.StringHelper
@@ -30,21 +29,18 @@ ident = stToB "Set"
 
 insert ref item = do
   ref' <- unlabel ident ref
-  let h = stHash item
   item' <- createValue item
-  ref'' <- T.insert ref' h item'
+  ref'' <- T.insert ref' item item'
   createLabel ident ref''
 
 delete ref item = do
   ref' <- unlabel ident ref
-  let h = stHash item
-  ref'' <- T.delete ref' h
+  ref'' <- T.delete ref' item
   createLabel ident ref''
 
 exists ref item = do
   ref' <- unlabel ident ref
-  let h = stHash item
-  ref'' <- T.lookup ref' h
+  ref'' <- T.lookup ref' item
   if null ref'' then
     return False
   else do
