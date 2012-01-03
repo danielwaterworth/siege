@@ -85,6 +85,7 @@ getLabel ref =
 
 traverse :: Node r -> [r]
 traverse (Branch options) = map snd options
+traverse (Sequence _ a b) = [a, b]
 traverse (Shortcut _ r) = [r]
 traverse (Value _) = []
 traverse (Label _ r) = [r]
