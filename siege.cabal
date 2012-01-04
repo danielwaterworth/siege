@@ -12,6 +12,10 @@ Cabal-version:        >=1.8
 
 -- TODO: put the bulk of the files in a library that is reused
 
+Flag werror
+  description:        Make warnings errors
+  default:            False
+
 Test-Suite siege-test
   build-depends:      base, bytestring, unix, directory, binary, mtl, 
                       transformers, SHA, enumerator, hex, containers, network, 
@@ -19,6 +23,9 @@ Test-Suite siege-test
   hs-source-dirs:     app/testsuite, app/src
   type:               exitcode-stdio-1.0
   main-is:            test.hs
+  GHC-Options:        -Wall
+  if flag(werror)
+    GHC-Options:      -Werror
 
 Executable siege-disk
   hs-source-dirs:     app/src
@@ -26,6 +33,9 @@ Executable siege-disk
                       transformers, SHA, enumerator, hex, containers, network, 
                       random
   main-is:            siege-disk.hs
+  GHC-Options:        -Wall
+  if flag(werror)
+    GHC-Options:      -Werror
 
 Executable siege-memory
   hs-source-dirs:     app/src
@@ -33,6 +43,9 @@ Executable siege-memory
                       transformers, SHA, enumerator, hex, containers, network, 
                       random
   main-is:            siege-memory.hs
+  GHC-Options:        -Wall
+  if flag(werror)
+    GHC-Options:      -Werror
 
 Flag buildDistributed
   description:        Build the distributed backend 
@@ -59,4 +72,7 @@ Executable siege-distributed
   else
     Buildable:        False
   main-is:            siege-distributed.hs
+  GHC-Options:        -Wall
+  if flag(werror)
+    GHC-Options:      -Werror
 
