@@ -1,4 +1,4 @@
-{-# LANGUAGE ExistentialQuantification, Rank2Types, DoAndIfThenElse #-}
+{-# LANGUAGE ExistentialQuantification, Rank2Types #-}
 
 -- Experimental Disk based backend
 -- Append only to begin with, at some point I'll make it do log structuring
@@ -74,7 +74,7 @@ main =
     headExists <- doesFileExist "head"
     v <- if headExists then
       liftM read $ readFile "head"
-    else do
+     else do
       writeFile "head" $ show (empty :: DiskRef)
       return empty
     var <- newFVar v

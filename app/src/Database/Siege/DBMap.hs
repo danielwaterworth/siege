@@ -1,5 +1,3 @@
-{-# LANGUAGE DoAndIfThenElse #-}
-
 module Database.Siege.DBMap where
 
 import Prelude hiding (null)
@@ -39,7 +37,7 @@ lookup ref key = do
   ref'' <- T.lookup ref' key
   if null ref'' then
     return empty
-  else do
+   else do
     node <- lift $ get ref''
     case node of
       Label key' ref''' ->
@@ -56,7 +54,7 @@ delete ref key = do
   ref'' <- T.delete ref' key
   if null ref'' then
     return empty
-  else
+   else
     N.createLabel ident ref''
 
 iterate :: (Monad m, Nullable r) => r -> E.Enumerator (B.ByteString, r) (RawDBOperation r m) a

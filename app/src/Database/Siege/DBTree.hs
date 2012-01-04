@@ -1,4 +1,4 @@
-{-# LANGUAGE ScopedTypeVariables, DoAndIfThenElse #-}
+{-# LANGUAGE ScopedTypeVariables #-}
 {-# OPTIONS_GHC -Wwarn #-} -- FIXME
 
 module Database.Siege.DBTree where
@@ -46,7 +46,7 @@ lookup ref h =
         Shortcut h' item' -> do
           if h' == (B.pack h) then
             return item'
-          else
+           else
             return empty
         _ ->
           throwError TypeError
@@ -75,7 +75,7 @@ insert ref h item =
                 ref <- insert' empty (tail h) item
                 let options' = (head h, ref):options
                 lift $ store $ Branch options'
-        Shortcut path item' -> do
+        Shortcut path item' ->
           if path == (B.pack h) then
             lift $ store $ Shortcut path item
           else
@@ -111,12 +111,12 @@ delete ref h =
                 let options' = filter (\(c, _) -> c /= head h) options
                 if null ref then
                   createBranch options'
-                else do
+                 else do
                   let options'' = (head h, ref):options'
                   createBranch options''
               Nothing ->
                 return ref
-        Shortcut path item -> do
+        Shortcut path item ->
           if path == (B.pack h) then
             return empty
           else
@@ -124,7 +124,7 @@ delete ref h =
         _ ->
           throwError TypeError
    where
-    createBranch options = do
+    createBranch options =
       if null options then
         return empty
       else if length options == 1 then do

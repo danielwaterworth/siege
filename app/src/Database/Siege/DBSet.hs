@@ -1,5 +1,3 @@
-{-# LANGUAGE DoAndIfThenElse #-}
-
 module Database.Siege.DBSet where
 
 import Prelude hiding (null)
@@ -44,7 +42,7 @@ exists ref item = do
   ref'' <- T.lookup ref' item
   if null ref'' then
     return False
-  else do
+   else do
     node <- lift $ get ref''
     case node of
       StringValue item' ->

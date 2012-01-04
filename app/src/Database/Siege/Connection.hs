@@ -1,4 +1,4 @@
-{-# LANGUAGE ExistentialQuantification, Rank2Types, DoAndIfThenElse #-}
+{-# LANGUAGE ExistentialQuantification, Rank2Types #-}
 
 module Database.Siege.Connection where
 
@@ -79,7 +79,7 @@ withSocket sock op =
         o <- S.recv s 4096
         if B.null o then
           doRecv [] s $ c (E.EOF)
-        else
+         else
           doRecv [] s $ c (E.Chunks [o])
       E.Yield o (E.Chunks d) ->
         return (o, d)

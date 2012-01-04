@@ -1,4 +1,3 @@
-{-# LANGUAGE DoAndIfThenElse #-}
 {-# OPTIONS_GHC -Wwarn #-}
 
 module Database.Siege.Recv where
@@ -23,9 +22,9 @@ recvByte = do
       let l = B.length dat'
       if l == 0 then
         recvByte
-      else if l == 1 then
+       else if l == 1 then
         return (Just $ B.head dat')
-      else
+       else
         E.yield (Just $ B.head dat') (E.Chunks [B.tail dat'])
     Nothing ->
       E.yield Nothing E.EOF
@@ -38,10 +37,10 @@ recv n = do
       let l = B.length dat'
       if l > n then
         E.yield (Just [B.take n dat']) (E.Chunks [B.drop n dat'])
-      else if l < n then do
+       else if l < n then do
         out <- recv (n - l)
         return $ fmap (\out' -> (dat':out')) out
-      else
+       else
         return $ Just [dat']
     Nothing -> do
       E.yield Nothing E.EOF
@@ -56,7 +55,7 @@ recvLine = do
           let n' = n + 2
           if B.length dat' == n' then
             return $ Just [dat']
-          else
+           else
             E.yield (Just [B.take n' dat']) (E.Chunks [B.drop n' dat'])
         Nothing ->
           if B.last dat' == (fromIntegral $ ord '\r') then do
@@ -90,9 +89,9 @@ recvCommand = runMaybeT $ do
       dat <- recvLift $ recv m
       _ <- recvLift $ recv 2
       return $ Just dat
-    else if m == -1 then
+     else if m == -1 then
       return Nothing
-    else
+     else
       MaybeT $ return Nothing
  where
   expectFirstChar :: Monad m => B.ByteString -> Char -> MaybeT m ()

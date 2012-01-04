@@ -1,4 +1,4 @@
-{-# LANGUAGE ExistentialQuantification, Rank2Types, DoAndIfThenElse #-}
+{-# LANGUAGE ExistentialQuantification, Rank2Types #-}
 
 -- Experimental RAM based backend
 
