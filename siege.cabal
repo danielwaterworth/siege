@@ -1,52 +1,62 @@
-Name:                siege
-Version:             0.1
-Synopsis:            A DBMS written in Haskell.
-License:             MIT
-License-file:        LICENSE
-Author:              DanielWaterworth
-Maintainer:          Da.Waterworth@gmail.com
-Category:            Database
-Build-type:          Simple
-Extra-source-files:  README.md
-Cabal-version:       >=1.8
+Name:                 siege
+Version:              0.1
+Synopsis:             A DBMS written in Haskell.
+License:              MIT
+License-file:         LICENSE
+Author:               DanielWaterworth
+Maintainer:           Da.Waterworth@gmail.com
+Category:             Database
+Build-type:           Simple
+Extra-source-files:   README.md
+Cabal-version:        >=1.8
 
 -- TODO: put the bulk of the files in a library that is reused
 
 Test-Suite siege-test
-  build-depends:     base, bytestring, unix, directory, binary, mtl, 
-                     transformers, SHA, enumerator, hex, containers, network, 
-                     random, redis, siege, QuickCheck
-  hs-source-dirs:    app/testsuite, app/src
-  type:              exitcode-stdio-1.0
-  main-is:           test.hs
+  build-depends:      base, bytestring, unix, directory, binary, mtl, 
+                      transformers, SHA, enumerator, hex, containers, network, 
+                      random, redis, siege, QuickCheck
+  hs-source-dirs:     app/testsuite, app/src
+  type:               exitcode-stdio-1.0
+  main-is:            test.hs
 
 Executable siege-disk
-  hs-source-dirs:    app/src
-  build-depends:     base, bytestring, unix, directory, binary, mtl, 
-                     transformers, SHA, enumerator, hex, containers, network, 
-                     random
-  main-is:           siege-disk.hs
+  hs-source-dirs:     app/src
+  build-depends:      base, bytestring, unix, directory, binary, mtl, 
+                      transformers, SHA, enumerator, hex, containers, network, 
+                      random
+  main-is:            siege-disk.hs
 
 Executable siege-memory
-  hs-source-dirs:    app/src
-  build-depends:     base, bytestring, unix, directory, binary, mtl, 
-                     transformers, SHA, enumerator, hex, containers, network, 
-                     random
-  main-is:           siege-memory.hs
+  hs-source-dirs:     app/src
+  build-depends:      base, bytestring, unix, directory, binary, mtl, 
+                      transformers, SHA, enumerator, hex, containers, network, 
+                      random
+  main-is:            siege-memory.hs
+
+Flag buildDistributed
+  description:        Build the distributed backend 
+  default:            False
 
 Library
-  include-dirs:      /usr/include/zookeeper, app/src/Database/Zookeeper
-  extra-libraries:   zookeeper_mt
-  build-tools:       hsc2hs
-  build-depends:     base >= 3 && < 5, unix, filepath
-  exposed-modules:   Database.Zookeeper.Core
-  C-Sources:         app/src/Database/Zookeeper/consts.c
-  hs-source-dirs:    app/src
+  if flag(buildDistributed)
+    include-dirs:     /usr/include/zookeeper, app/src/Database/Zookeeper
+    extra-libraries:  zookeeper_mt
+    build-tools:      hsc2hs
+    build-depends:    base >= 3 && < 5, unix, filepath
+    exposed-modules:  Database.Zookeeper.Core
+    C-Sources:        app/src/Database/Zookeeper/consts.c
+    hs-source-dirs:   app/src
+  else
+    buildable:        False
 
 Executable siege-distributed
-  build-depends:     base, bytestring, unix, directory, binary, mtl, 
-                     transformers, SHA, enumerator, hex, containers, network, 
-                     random, redis, siege
-  hs-source-dirs:    app/src
-  main-is:           siege-distributed.hs
+  if flag(buildDistributed)
+    build-depends:    base, bytestring, unix, directory, binary, mtl, 
+                      transformers, SHA, enumerator, hex, containers, network, 
+                      random, redis, siege
+    hs-source-dirs:   app/src
+  else
+    Buildable:        False
+  main-is:            siege-distributed.hs
 
