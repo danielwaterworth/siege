@@ -1,4 +1,5 @@
 {-# LANGUAGE ExistentialQuantification, Rank2Types #-}
+{-# OPTIONS_GHC -Wwarn #-} -- FIXME
 
 module Database.Siege.DBOperation where
 
@@ -75,12 +76,12 @@ instance Monad (DBOperation r) where
       MapLookup r k c -> MapLookup r k (\i -> c i >>= f)
       MapInsert r k v c -> MapInsert r k v (\i -> c i >>= f)
       MapDelete r k c -> MapDelete r k (\i -> c i >>= f)
-      MapItems r i c -> MapItems r i (\i -> c i >>= f)
+      MapItems r it c -> MapItems r it (\i -> c i >>= f)
 
       SetHas r k c -> SetHas r k (\i -> c i >>= f)
       SetInsert r k c -> SetInsert r k (\i -> c i >>= f)
       SetDelete r k c -> SetDelete r k (\i -> c i >>= f)
-      SetItems r i c -> SetItems r i (\i -> c i >>= f)
+      SetItems r it c -> SetItems r it (\i -> c i >>= f)
 
 convert :: (Monad m, Nullable r) => DBOperation r a -> RawDBOperation r m a
 convert (Done x) = return x
@@ -99,6 +100,7 @@ convert (GetType r c) =
           convert $ c $ Just Set
         else
           undefined
+      _ -> undefined
 
 convert (CreateValue v c) = do
   o <- N.createValue v

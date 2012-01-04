@@ -1,4 +1,5 @@
 {-# LANGUAGE ScopedTypeVariables, DoAndIfThenElse #-}
+{-# OPTIONS_GHC -Wwarn #-} -- FIXME
 
 module Database.Siege.DBTree where
 
@@ -6,17 +7,13 @@ import Prelude hiding (null, lookup)
 import Data.Nullable
 
 import Data.Maybe
-import Data.Word
 import qualified Data.ByteString as B
 import Data.List hiding (null, lookup, delete, insert)
 import qualified Data.Enumerator as E
 
-import Data.Set (Set)
 import qualified Data.Set as S
-import Data.Map (Map)
 import qualified Data.Map as M
 
-import Control.Monad
 import Control.Monad.Trans
 import Control.Monad.Trans.Error
 
@@ -236,6 +233,6 @@ merge fn a b c = do
                 return $ Just $ Just r
             Nothing ->
               return Nothing
-  getOptions :: Monad m => Ref -> (RawDBOperation Ref m) [(Word8, Ref)]
-  getOptions r = do
-    undefined
+--  getOptions :: Monad m => Ref -> (RawDBOperation Ref m) [(Word8, Ref)]
+--  getOptions r = do
+--    undefined

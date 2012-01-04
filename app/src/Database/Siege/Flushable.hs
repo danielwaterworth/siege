@@ -1,3 +1,5 @@
+{-# OPTIONS_GHC -Wwarn #-} -- I anticipate rewriting this, no point fixing warnings
+
 module Database.Siege.Flushable where
 
 import Control.Concurrent.MVar

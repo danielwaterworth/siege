@@ -9,15 +9,12 @@ import Database.Siege.Store
 
 import qualified Data.Enumerator as E
 import qualified Data.Enumerator.List as EL
-import Data.Enumerator.Hoist
 
 import Data.Maybe
-import Data.Char
 import qualified Data.ByteString as B
 
 import Control.Monad
 import Control.Monad.Trans
-import Control.Monad.Trans.Maybe
 import Control.Monad.Trans.Error
 
 import Database.Siege.DBNode as N
@@ -25,19 +22,23 @@ import Database.Siege.DBTree as T
 
 import Database.Siege.StringHelper
 
+ident :: B.ByteString
 ident = stToB "Set"
 
+insert :: (Monad m, Nullable r) => r -> B.ByteString -> RawDBOperation r m r
 insert ref item = do
   ref' <- unlabel ident ref
   item' <- createValue item
   ref'' <- T.insert ref' item item'
   createLabel ident ref''
 
+delete :: (Monad m, Nullable r) => r -> B.ByteString -> RawDBOperation r m r
 delete ref item = do
   ref' <- unlabel ident ref
   ref'' <- T.delete ref' item
   createLabel ident ref''
 
+exists :: (Monad m, Nullable r) => r -> B.ByteString -> RawDBOperation r m Bool
 exists ref item = do
   ref' <- unlabel ident ref
   ref'' <- T.lookup ref' item

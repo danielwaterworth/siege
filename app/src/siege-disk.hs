@@ -8,7 +8,6 @@ import Data.Nullable
 
 import Control.Concurrent
 import Control.Monad
-import Control.Monad.Trans.Error
 import System.IO
 
 import Database.Siege.StringHelper
@@ -19,17 +18,12 @@ import Database.Siege.NetworkHelper
 import Database.Siege.Store
 
 import Database.Siege.DBNode
-import Database.Siege.DBNodeBinary
+import Database.Siege.DBNodeBinary ()
 
-import Data.Int
 import Data.Binary as Bin
 import qualified Data.ByteString as B
 
 import System.Directory
-import System.IO
-import System.Posix.IO
-
-import Database.Siege.StringHelper
 
 newtype DiskRef = DiskRef Word64 deriving (Eq, Show, Read)
 
@@ -60,8 +54,8 @@ putNode hnd node = do
 
 withHandle :: Handle -> StoreT DiskRef (Node DiskRef) IO a -> IO a
 withHandle hnd op = do
-  v <- runStoreT op
-  case v of
+  step <- runStoreT op
+  case step of
     Done a -> return a
     Get k c -> do
       node <- getNode hnd k
@@ -73,6 +67,7 @@ withHandle hnd op = do
 withHandle' :: (forall x. (Handle -> IO x) -> IO x) -> StoreT DiskRef (Node DiskRef) IO a -> IO a
 withHandle' hnd op = hnd (\hnd' -> withHandle hnd' op)
 
+main :: IO ()
 main =
   withFile "./test.db" ReadWriteMode (\hnd -> do
     hnd' <- newMVar hnd
@@ -83,11 +78,11 @@ main =
       writeFile "head" $ show (empty :: DiskRef)
       return empty
     var <- newFVar v
-    forkIO $ forever $ flushFVar (\head -> do
-      print ("new head", head)
+    _ <- forkIO $ forever $ flushFVar (\ref -> do
+      print ("new head", ref)
       withMVar hnd' hFlush
         -- TODO: sync to disk, fsync $ handleToFd hnd
-      writeFile "head.new" (show head)
+      writeFile "head.new" (show ref)
       renameFile "head" "head.old"
       renameFile "head.new" "head"
       removeFile "head.old"

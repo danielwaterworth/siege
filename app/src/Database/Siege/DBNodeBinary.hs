@@ -1,3 +1,5 @@
+{-# OPTIONS_GHC -fno-warn-orphans #-}
+
 module Database.Siege.DBNodeBinary where
 
 import Database.Siege.DBNode
@@ -41,8 +43,8 @@ instance Binary r => Binary (Node r) where
     put 'a'
     put items
   get = do
-    v <- get
-    case v of
+    ty <- get
+    case ty of
       'b' -> do
         options <- get
         return $ Branch options
@@ -60,3 +62,4 @@ instance Binary r => Binary (Node r) where
       'a' -> do
         items <- get
         return $ Array items
+      _ -> undefined

@@ -9,7 +9,7 @@ import Control.Monad.Identity
 import Control.Monad.Trans.Error
 
 import Database.Siege.Store
-import Database.Siege.DBNode (Node, RawDBOperation, DBError)
+import Database.Siege.DBNode (Node, RawDBOperation)
 
 newtype MemoryRef = MemoryRef {
   unRef :: Maybe (Node MemoryRef)
@@ -21,8 +21,8 @@ instance Nullable MemoryRef where
 
 reduceStore :: (Monad m) => StoreT MemoryRef (Node MemoryRef) m a -> m a
 reduceStore op = do
-  v <- runStoreT op
-  case v of
+  step <- runStoreT op
+  case step of
     Done a -> return a
     Get k c -> (reduceStore . c . fromJust . unRef) k
     Store v c -> (reduceStore . c . MemoryRef . Just) v

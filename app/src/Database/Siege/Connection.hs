@@ -2,20 +2,14 @@
 
 module Database.Siege.Connection where
 
-import Data.Char
-import Data.List
 import qualified Data.ByteString as B
-import qualified Data.ByteString.Lazy as L
 import qualified Data.Enumerator as E
-import Data.Enumerator.Hoist
+import Data.Enumerator.Hoist ()
 import Control.Monad
 import Control.Monad.Hoist
-import Control.Concurrent
 import Control.Monad.Trans
 import Network.Socket hiding (recv, send)
 import qualified Network.Socket.ByteString as S
-
-import Debug.Trace.Monad
 
 data Step m a =
   Done a |
@@ -50,6 +44,7 @@ instance MonadHoist ConnectionT where
       Done x -> return $ Done x
       Send dat c -> return $ Send dat $ hoist f c
       Recv n c -> return $ Recv (hoist f n) $ hoist f . c
+      Close -> return $ Close
 
 send :: Monad m => B.ByteString -> ConnectionT m ()
 send = ConnectionT . return . flip Send (return ())
@@ -62,19 +57,19 @@ close = ConnectionT $ return $ Close
 
 withSocket :: Socket -> ConnectionT IO () -> IO ()
 withSocket sock op =
-  withSocket' [] sock op
+  withSocket' [] op
  where
-  withSocket' input sock op = do
-    v <- runConnectionT op
+  withSocket' input op' = do
+    v <- runConnectionT op'
     case v of
       Done x ->
         return x
       Send dat c -> do
-        S.send sock dat
-        withSocket' input sock c
+        _ <- S.send sock dat
+        withSocket' input c
       Recv i c -> do
         (x, dat) <- doRecv input sock i
-        withSocket' dat sock $ c x
+        withSocket' dat $ c x
       Close -> do
         sClose sock
   doRecv dat s i = do
@@ -88,4 +83,6 @@ withSocket sock op =
           doRecv [] s $ c (E.Chunks [o])
       E.Yield o (E.Chunks d) ->
         return (o, d)
+      E.Yield _ E.EOF ->
+        undefined -- TODO: fixme properly
       E.Error err -> (error . show) err -- TODO: fixme properly

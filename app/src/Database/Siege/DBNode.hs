@@ -7,7 +7,7 @@ import Database.Siege.Store
 
 import Control.Monad.Trans
 import Control.Monad.Trans.Error
-import Data.Int
+--import Data.Int
 import Data.Word
 import qualified Data.ByteString as B
 

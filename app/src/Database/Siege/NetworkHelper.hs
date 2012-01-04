@@ -12,7 +12,7 @@ listenAt port act = do
   bindSocket lsock $ SockAddrInet port' iNADDR_ANY
   listen lsock 5
   forever $ do
-    (sock, addr) <- accept lsock
+    (sock, _) <- accept lsock
     forkIO $ do
       act sock
       sClose sock

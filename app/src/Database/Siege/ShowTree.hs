@@ -33,8 +33,8 @@ pullTree ref =
         return $ TreeShortcut h tree
       StringValue st ->
         return $ TreeStringValue st
-      Label key ref -> do
-        tree <- pullTree ref
+      Label key ref' -> do
+        tree <- pullTree ref'
         return $ TreeLabel key tree
       Array refs -> do
         trees <- mapM pullTree refs

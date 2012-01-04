@@ -1,4 +1,5 @@
 {-# LANGUAGE ExistentialQuantification, Rank2Types, ImpredicativeTypes, DoAndIfThenElse #-}
+{-# OPTIONS_GHC -Wwarn #-} -- I anticipate rewriting this
 
 module Database.Siege.NetworkProtocol where
 

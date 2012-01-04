@@ -12,19 +12,18 @@ import qualified Data.Enumerator.List as EL
 
 import Control.Monad
 import Control.Monad.Trans
-import Control.Monad.Trans.Maybe
 import Control.Monad.Trans.Error
 
 import Data.Maybe
-import Data.Char
 import qualified Data.ByteString as B
 
-import Database.Siege.DBNode (Ref, Node(..), RawDBOperation, DBError(..))
+import Database.Siege.DBNode (Node(..), RawDBOperation, DBError(..))
 import qualified Database.Siege.DBNode as N
 import Database.Siege.DBTree as T
 
 import Database.Siege.StringHelper
 
+ident :: B.ByteString
 ident = stToB "Map"
 
 insert :: (Monad m, Nullable r) => r -> B.ByteString -> r -> RawDBOperation r m r

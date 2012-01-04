@@ -2,12 +2,10 @@
 
 module Database.Siege.Store where
 
-import Data.Map (Map)
 import qualified Data.Map as M
 import Control.Monad
 import Control.Monad.Hoist
 import Control.Monad.Trans
-import Database.Siege.Hash
 
 -- The semantics of store should be that it continues as soon as the reference 
 -- has been calculated, but that the entire operation shouldn't complete until 
@@ -25,8 +23,8 @@ data StoreT k v m a = StoreT {
 instance Monad m => Monad (StoreT k v m) where
   return = StoreT . return . Done
   m >>= f = StoreT $ do
-    v <- runStoreT m
-    case v of
+    step <- runStoreT m
+    case step of
       Done x -> runStoreT $ f x
       Get k c -> return $ Get k (\i -> c i >>= f)
       Store v c -> return $ Store v (\i -> c i >>= f)
@@ -45,7 +43,10 @@ instance MonadHoist (StoreT k v) where
       Get k c -> return $ Get k $ hoist f . c
       Store v c -> return $ Store v $ hoist f . c
 
+get :: Monad m => k -> StoreT k a m a
 get k = StoreT $ return $ Get k return
+
+store :: Monad m => v -> StoreT a v m a
 store v = StoreT $ return $ Store v return
 
 keyChange :: Monad m => (k0 -> k1) -> (k1 -> k0) -> StoreT k0 v m a -> StoreT k1 v m a
@@ -68,8 +69,8 @@ cache :: (Ord k, Monad m) => StoreT k v m a -> StoreT k v m a
 cache op = do
   cache' M.empty op
  where
-  cache' m op = do
-    step <- lift $ runStoreT op
+  cache' m op' = do
+    step <- lift $ runStoreT op'
     case step of 
       Done a -> return a
       Get k c -> do

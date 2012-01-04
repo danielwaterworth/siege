@@ -1,4 +1,5 @@
 {-# LANGUAGE DoAndIfThenElse #-}
+{-# OPTIONS_GHC -Wwarn #-}
 
 module Database.Siege.Recv where
 
@@ -10,7 +11,6 @@ import qualified Data.Enumerator as E
 import qualified Data.Enumerator.List as EL
 
 import Control.Monad
-import Control.Monad.Trans
 import Control.Monad.Trans.Maybe
 
 import Database.Siege.StringHelper
@@ -69,7 +69,6 @@ recvLine = do
                   E.yield () (E.Chunks [nxt'])
                   out <- recvLine
                   return $ fmap (\out' -> (dat':out')) out
-                  undefined
               Nothing ->
                 E.yield Nothing E.EOF
           else do
@@ -84,12 +83,12 @@ recvCommand = runMaybeT $ do
   expectFirstChar line '*'
   n <- MaybeT $ return $ ((maybeRead . applyReversed (drop 2) . tail . bToSt) line :: Maybe Int)
   replicateM n $ do
-    line <- recvLift recvLine
-    expectFirstChar line '$'
-    m <- MaybeT $ return $ ((maybeRead . applyReversed (drop 2) . tail . bToSt) line :: Maybe Int)
+    line' <- recvLift recvLine
+    expectFirstChar line' '$'
+    m <- MaybeT $ return $ ((maybeRead . applyReversed (drop 2) . tail . bToSt) line' :: Maybe Int)
     if m >= 0 then do
       dat <- recvLift $ recv m
-      recvLift $ recv 2
+      _ <- recvLift $ recv 2
       return $ Just dat
     else if m == -1 then
       return Nothing

@@ -1,3 +1,5 @@
+{-# OPTIONS_GHC -Wwarn #-} -- I anticipate rewriting this
+
 module Database.Siege.Commands where
 
 import Prelude hiding (null)

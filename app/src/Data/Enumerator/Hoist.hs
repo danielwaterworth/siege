@@ -1,3 +1,5 @@
+{-# OPTIONS_GHC -fno-warn-orphans #-}
+
 module Data.Enumerator.Hoist where
 
 import Control.Monad.Hoist
