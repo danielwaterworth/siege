@@ -30,7 +30,7 @@ instance Binary r => Binary (Node r) where
     put 's'
     put r
     putByteString k
-  put (Value v) = do
+  put (StringValue v) = do
     put 'v'
     putByteString v
   put (Label l r) = do
@@ -52,7 +52,7 @@ instance Binary r => Binary (Node r) where
         return $ Shortcut k r
       'v' -> do
         v <- getRemaining
-        return $ Value v
+        return $ StringValue v
       'l' -> do
         r <- get
         l <- getRemaining

@@ -7,6 +7,7 @@ import Database.Siege.Store
 
 import Control.Monad.Trans
 import Control.Monad.Trans.Error
+import Data.Int
 import Data.Word
 import qualified Data.ByteString as B
 
@@ -24,7 +25,7 @@ validRef = (== 20) . B.length . unRef
 data Node r =
   Branch [(Word8, r)] |
   Shortcut B.ByteString r |
-  Value B.ByteString |
+  StringValue B.ByteString |
   Label B.ByteString r |
   Array [r] deriving (Read, Show, Eq)
 
@@ -39,7 +40,7 @@ type RawDBOperation r m = ErrorT DBError (StoreT r (Node r) m)
 
 createValue :: (Monad m, Nullable r) => B.ByteString -> RawDBOperation r m r
 createValue dat =
-  lift $ store $ Value dat
+  lift $ store $ StringValue dat
 
 getValue :: (Monad m, Nullable r) => r -> RawDBOperation r m (Maybe B.ByteString)
 getValue ref =
@@ -48,7 +49,7 @@ getValue ref =
   else do
     node <- lift $ get ref
     case node of
-      Value st -> return $ Just st
+      StringValue st -> return $ Just st
       _ -> throwError TypeError
 
 createLabel :: (Monad m, Nullable r) => B.ByteString -> r -> RawDBOperation r m r
@@ -85,6 +86,6 @@ getLabel ref =
 traverse :: Node r -> [r]
 traverse (Branch options) = map snd options
 traverse (Shortcut _ r) = [r]
-traverse (Value _) = []
+traverse (StringValue _) = []
 traverse (Label _ r) = [r]
 traverse (Array r) = r

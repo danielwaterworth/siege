@@ -91,7 +91,7 @@ convert (GetType r c) =
   else do
     o <- lift $ S.get r
     case o of
-      (N.Value _) -> convert $ c $ Just Value
+      (N.StringValue _) -> convert $ c $ Just Value
       (N.Label l _) ->
         if l == Map.ident then
           convert $ c $ Just Map

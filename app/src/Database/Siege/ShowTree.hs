@@ -12,7 +12,7 @@ data Tree =
   Empty |
   TreeBranch [(Word8, Tree)] |
   TreeShortcut B.ByteString Tree |
-  TreeValue B.ByteString |
+  TreeStringValue B.ByteString |
   TreeLabel B.ByteString Tree |
   TreeArray [Tree] deriving (Show)
 
@@ -31,8 +31,8 @@ pullTree ref =
       Shortcut h i -> do
         tree <- pullTree i
         return $ TreeShortcut h tree
-      Value st ->
-        return $ TreeValue st
+      StringValue st ->
+        return $ TreeStringValue st
       Label key ref -> do
         tree <- pullTree ref
         return $ TreeLabel key tree

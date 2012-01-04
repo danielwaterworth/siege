@@ -46,7 +46,7 @@ exists ref item = do
   else do
     node <- lift $ get ref''
     case node of
-      Value item' ->
+      StringValue item' ->
         if item == item' then
           return True
         else
