@@ -12,7 +12,6 @@ data Tree =
   Empty |
   TreeBranch [(Word8, Tree)] |
   TreeShortcut B.ByteString Tree |
-  TreeSequence Word64 Tree Tree |
   TreeValue B.ByteString |
   TreeLabel B.ByteString Tree |
   TreeArray [Tree] deriving (Show)
@@ -32,10 +31,6 @@ pullTree ref =
       Shortcut h i -> do
         tree <- pullTree i
         return $ TreeShortcut h tree
-      Sequence n a b -> do
-        a' <- pullTree a
-        b' <- pullTree b
-        return $ TreeSequence n a' b'
       Value st ->
         return $ TreeValue st
       Label key ref -> do

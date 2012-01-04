@@ -30,11 +30,6 @@ instance Binary r => Binary (Node r) where
     put 's'
     put r
     putByteString k
-  put (Sequence sz a b) = do
-    put 'q'
-    put sz
-    put a
-    put b
   put (Value v) = do
     put 'v'
     putByteString v
@@ -55,11 +50,6 @@ instance Binary r => Binary (Node r) where
         r <- get
         k <- getRemaining
         return $ Shortcut k r
-      'q' -> do
-        sz <- get
-        a <- get
-        b <- get
-        return $ Sequence sz a b
       'v' -> do
         v <- getRemaining
         return $ Value v

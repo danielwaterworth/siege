@@ -24,7 +24,6 @@ validRef = (== 20) . B.length . unRef
 data Node r =
   Branch [(Word8, r)] |
   Shortcut B.ByteString r |
-  Sequence Word64 r r |
   Value B.ByteString |
   Label B.ByteString r |
   Array [r] deriving (Read, Show, Eq)
@@ -85,7 +84,6 @@ getLabel ref =
 
 traverse :: Node r -> [r]
 traverse (Branch options) = map snd options
-traverse (Sequence _ a b) = [a, b]
 traverse (Shortcut _ r) = [r]
 traverse (Value _) = []
 traverse (Label _ r) = [r]
