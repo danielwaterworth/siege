@@ -15,7 +15,7 @@ import Database.Siege.Flushable
 import Database.Siege.NetworkProtocol
 import Database.Siege.NetworkHelper
 
-import Database.Siege.Store
+import Control.Monad.Trans.Store
 
 import Database.Siege.DBNode
 import Database.Siege.DBNodeBinary ()

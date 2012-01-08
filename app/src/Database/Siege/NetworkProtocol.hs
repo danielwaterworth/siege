@@ -22,8 +22,8 @@ import Control.Monad.Trans.State as State
 
 import Database.Siege.Connection as C
 import Database.Siege.SharedState as Sh
-import Database.Siege.Store (StoreT(..), cache)
-import qualified Database.Siege.Store as St
+import Control.Monad.Trans.Store (StoreT(..), cache)
+import qualified Control.Monad.Trans.Store as St
 import qualified Database.Siege.Recv as R
 import Database.Siege.DBNode (Ref, Node, DBError)
 import qualified Database.Siege.DBNode as N

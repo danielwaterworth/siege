@@ -16,7 +16,7 @@ import Database.Siege.NetworkProtocol
 import Database.Siege.Connection
 import Database.Siege.NetworkHelper
 import Database.Siege.StringHelper
-import Database.Siege.Store
+import Control.Monad.Trans.Store
 import Database.Siege.DoStore
 
 initZookeeper = do

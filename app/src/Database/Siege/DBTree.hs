@@ -17,7 +17,7 @@ import qualified Data.Map as M
 import Control.Monad.Trans
 import Control.Monad.Trans.Error
 
-import Database.Siege.Store
+import Control.Monad.Trans.Store
 
 import Database.Siege.DBNode (Ref, Node(..), RawDBOperation, DBError(..))
 import qualified Database.Siege.DBNode as N

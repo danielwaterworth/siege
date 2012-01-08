@@ -8,7 +8,7 @@ import Data.Word
 import Data.Char
 import qualified Data.ByteString as B
 import qualified Data.ByteString.Lazy as L
-import qualified Database.Siege.Store as S
+import qualified Control.Monad.Trans.Store as S
 import qualified Database.Redis.Redis as R
 import Database.Siege.Hash
 import qualified Database.Siege.DBNode as N

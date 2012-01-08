@@ -1,6 +1,6 @@
 {-# LANGUAGE ExistentialQuantification, Rank2Types #-}
 
-module Database.Siege.Store where
+module Control.Monad.Trans.Store where
 
 import qualified Data.Map as M
 import Control.Monad

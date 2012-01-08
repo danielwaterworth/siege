@@ -5,7 +5,7 @@ import Data.Nullable
 
 import Data.Word
 import qualified Data.ByteString as B
-import Database.Siege.Store
+import Control.Monad.Trans.Store
 import Database.Siege.DBNode
 
 data Tree =

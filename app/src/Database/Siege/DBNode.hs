@@ -3,7 +3,7 @@ module Database.Siege.DBNode where
 import Prelude hiding (null)
 import Data.Nullable
 
-import Database.Siege.Store
+import Control.Monad.Trans.Store
 
 import Control.Monad.Trans
 import Control.Monad.Trans.Error

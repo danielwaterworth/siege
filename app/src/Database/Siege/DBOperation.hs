@@ -17,7 +17,7 @@ import Data.Enumerator.Hoist
 
 import qualified Database.Siege.DBMap as Map
 import qualified Database.Siege.DBSet as Set
-import qualified Database.Siege.Store as S
+import qualified Control.Monad.Trans.Store as S
 import Database.Siege.DBNode (Ref, Node, RawDBOperation)
 import qualified Database.Siege.DBNode as N
 

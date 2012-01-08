@@ -8,7 +8,7 @@ import Data.Maybe
 import Control.Monad.Identity
 import Control.Monad.Trans.Error
 
-import Database.Siege.Store
+import Control.Monad.Trans.Store
 import Database.Siege.DBNode (Node, RawDBOperation)
 
 newtype MemoryRef = MemoryRef {

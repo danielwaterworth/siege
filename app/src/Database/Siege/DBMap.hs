@@ -3,7 +3,7 @@ module Database.Siege.DBMap where
 import Prelude hiding (null)
 import Data.Nullable
 
-import Database.Siege.Store
+import Control.Monad.Trans.Store
 
 import qualified Data.Enumerator as E
 import qualified Data.Enumerator.List as EL
