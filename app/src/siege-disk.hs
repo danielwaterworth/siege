@@ -52,20 +52,20 @@ putNode hnd node = do
   B.hPut hnd n'
   return $ DiskRef $ fromIntegral pos
 
-withHandle :: Handle -> StoreT DiskRef (Node DiskRef) IO a -> IO a
-withHandle hnd op = do
+diskStoreTransform :: Handle -> StoreT DiskRef (Node DiskRef) IO a -> IO a
+diskStoreTransform hnd op = do
   step <- runStoreT op
   case step of
     Done a -> return a
     Get k c -> do
       node <- getNode hnd k
-      withHandle hnd $ c node
+      diskStoreTransform hnd $ c node
     Store v c -> do
       ref <- putNode hnd v
-      withHandle hnd $ c ref
+      diskStoreTransform hnd $ c ref
 
-withHandle' :: (forall x. (Handle -> IO x) -> IO x) -> StoreT DiskRef (Node DiskRef) IO a -> IO a
-withHandle' hnd op = hnd (\hnd' -> withHandle hnd' op)
+diskStoreTransform' :: (forall x. (Handle -> IO x) -> IO x) -> StoreT DiskRef (Node DiskRef) IO a -> IO a
+diskStoreTransform' hnd op = hnd (\hnd' -> diskStoreTransform hnd' op)
 
 main :: IO ()
 main =
@@ -89,4 +89,4 @@ main =
       return ()) var
     listenAt 4050 (\sock -> do
       print "new socket [="
-      convert protocol sock var (withHandle' (withMVar hnd'))))
+      convert protocol sock var (diskStoreTransform' (withMVar hnd'))))
