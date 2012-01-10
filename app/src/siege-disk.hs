@@ -31,10 +31,6 @@ instance Binary DiskRef where
   get = liftM DiskRef Bin.get
   put (DiskRef r) = Bin.put r
 
-instance Nullable DiskRef where
-  empty = DiskRef (-1)
-  null = (== empty)
-
 getNode :: Handle -> DiskRef -> IO (Node DiskRef)
 getNode hnd (DiskRef r) = do
   hSeek hnd AbsoluteSeek $ fromIntegral r
@@ -75,8 +71,8 @@ main =
     v <- if headExists then
       liftM read $ readFile "head"
      else do
-      writeFile "head" $ show (empty :: DiskRef)
-      return empty
+      writeFile "head" $ show (Nothing :: Maybe DiskRef)
+      return (Nothing :: Maybe DiskRef)
     var <- newFVar v
     _ <- forkIO $ forever $ flushFVar (\ref -> do
       print ("new head", ref)
