@@ -41,9 +41,9 @@ import Debug.Trace.Monad
 -- The reason this isn't over the DBOperation monad as you might expect is that 
 -- it needs to be able to handle errors and to send them back to the client 
 -- which wouldn't otherwise be possible.
-type NetworkOp r = ConnectionT (SharedStateT r (StoreT r (Node r) Identity))
+type NetworkOp r = ConnectionT (SharedStateT (Maybe r) (StoreT r (Node r) Identity))
 
-convert :: (Nullable r) => NetworkOp r () -> Socket -> FVar r -> (forall a. StoreT r (Node r) IO a -> IO a) -> IO ()
+convert :: NetworkOp r () -> Socket -> FVar (Maybe r) -> (forall a. StoreT r (Node r) IO a -> IO a) -> IO ()
 convert op sock var fn =
   let stage1 = withSocket sock . hoist stage2
       stage2 = withFVar var . hoist stage3
@@ -51,7 +51,7 @@ convert op sock var fn =
       stage4 = return . runIdentity in
         stage1 op
 
-recvCommand :: (Nullable r) => NetworkOp r [Maybe B.ByteString]
+recvCommand :: NetworkOp r [Maybe B.ByteString]
 recvCommand = do
   v <- C.recvI R.recvCommand
   case v of
@@ -61,7 +61,7 @@ recvCommand = do
     Just v' ->
       return v'
 
-performAlter :: (Nullable r) => (r -> DBOperation r (a, r)) -> NetworkOp r (Either DBError a)
+performAlter :: (Maybe r -> DBOperation r (a, Maybe r)) -> NetworkOp r (Either DBError a)
 performAlter op =
   lift $ alter $ (\head -> do
     v <- runErrorT $ DBOp.convert $ op head
@@ -69,7 +69,7 @@ performAlter op =
       Right (a, r) -> return (r, Right a)
       Left e -> return (head, Left e))
 
-performRead :: (Nullable r) => (r -> DBOperation r a) -> NetworkOp r (Either DBError a)
+performRead :: (Maybe r -> DBOperation r a) -> NetworkOp r (Either DBError a)
 performRead op = do
   head <- lift Sh.get
   lift $ lift $ runErrorT $ DBOp.convert $ op head
@@ -86,7 +86,7 @@ constructList act = do
         Right v' -> return $ Right v'
         Left arr -> return $ Left $ v':arr
 
-protocol :: (Nullable r) => NetworkOp r ()
+protocol :: NetworkOp r ()
 protocol = flip (>>) (return ()) $ flip runStateT Map.empty $ forever $ do
   c <- lift $ recvCommand
   c' <- case sequence c of

@@ -23,37 +23,46 @@ import Database.Siege.StringHelper
 ident :: B.ByteString
 ident = stToB "Set"
 
-insert :: (Monad m, Nullable r) => r -> B.ByteString -> RawDBOperation r m r
-insert ref item = do
+insert :: Monad m => Maybe r -> B.ByteString -> RawDBOperation r m r
+insert Nothing item = do
+  item' <- createValue item
+  ref <- T.insert Nothing item item'
+  createLabel ident ref
+insert (Just ref) item = do
   ref' <- unlabel ident ref
   item' <- createValue item
-  ref'' <- T.insert ref' item item'
+  ref'' <- T.insert (Just ref') item item'
   createLabel ident ref''
 
-delete :: (Monad m, Nullable r) => r -> B.ByteString -> RawDBOperation r m r
-delete ref item = do
+delete :: Monad m => Maybe r -> B.ByteString -> RawDBOperation r m (Maybe r)
+delete Nothing item = return Nothing
+delete (Just ref) item = do
   ref' <- unlabel ident ref
-  ref'' <- T.delete ref' item
-  createLabel ident ref''
+  ref'' <- T.delete (Just ref') item
+  case ref'' of
+    Just ref''' -> liftM Just $ createLabel ident ref'''
+    Nothing -> return Nothing
 
-exists :: (Monad m, Nullable r) => r -> B.ByteString -> RawDBOperation r m Bool
-exists ref item = do
+exists :: Monad m => Maybe r -> B.ByteString -> RawDBOperation r m Bool
+exists Nothing item = return False
+exists (Just ref) item = do
   ref' <- unlabel ident ref
-  ref'' <- T.lookup ref' item
-  if null ref'' then
-    return False
-   else do
-    node <- lift $ get ref''
-    case node of
-      StringValue item' ->
-        if item == item' then
-          return True
-        else
-          (error . show) ("wooh, key collision ", item, item')
-      _ ->
-        throwError TypeError
+  ref'' <- T.lookup (Just ref') item
+  case ref'' of
+    Nothing -> return False
+    Just ref''' -> do
+      node <- lift $ get ref'''
+      case node of
+        StringValue item' ->
+          if item == item' then
+            return True
+          else
+            (error . show) ("wooh, key collision ", item, item')
+        _ ->
+          throwError TypeError
 
-iterate :: (Monad m, Nullable r) => r -> E.Enumerator B.ByteString (RawDBOperation r m) a
-iterate ref i = do
+iterate :: Monad m => Maybe r -> E.Enumerator B.ByteString (RawDBOperation r m) a
+iterate Nothing i = E.returnI i
+iterate (Just ref) i = do
   ref' <- lift $ unlabel ident ref
-  (T.iterate ref' E.$= (EL.concatMapM (\r -> liftM maybeToList $ N.getValue r))) i
+  (T.iterate (Just ref') E.$= (EL.mapM N.getValue)) i

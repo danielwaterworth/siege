@@ -39,7 +39,7 @@ globMatch (p:ps) (m:ms) =
   else
     False
 
-readCommand :: (Nullable r) => String -> [B.ByteString] -> Maybe (r -> DBOperation r (Reply))
+readCommand :: String -> [B.ByteString] -> Maybe (Maybe r -> DBOperation r Reply)
 readCommand "type" [key] = Just (\head -> do
   ref <- mapLookup head key
   ty <- getType ref
@@ -85,7 +85,7 @@ readCommand "hgetall" [key] = Just (\head -> do
               E.yield [] E.EOF
             E.Chunks items' -> do
               items''' <- mapM (\(key, value) -> do
-                value' <- lift $ getValue value
+                value' <- lift $ getValue (Just value)
                 case value' of
                   Just v ->
                     return [key, v]
@@ -136,7 +136,7 @@ readCommand "scard" [key] = Just (\head -> do
   return $ IntegerReply n)
 readCommand _ _ = Nothing
 
-writeCommand :: (Nullable r) => String -> [B.ByteString] -> Maybe (r -> DBOperation r (Reply, r))
+writeCommand :: String -> [B.ByteString] -> Maybe (Maybe r -> DBOperation r (Reply, Maybe r))
 writeCommand "set" [key, val] = Just (\head -> do
   val' <- createValue val
   head' <- mapInsert head key val'
@@ -179,8 +179,7 @@ command c0 c1 =
     (_, Just c) -> Just (Right c)
     _ -> Nothing
 
-commandToState :: (Nullable r) =>
-  Either (r -> DBOperation r Reply) (r -> DBOperation r (Reply, r)) -> StateT r (DBOperation r) Reply
+commandToState :: Either (r -> DBOperation r Reply) (r -> DBOperation r (Reply, r)) -> StateT r (DBOperation r) Reply
 commandToState (Right c) = StateT c
 commandToState (Left c) = do
   head <- get

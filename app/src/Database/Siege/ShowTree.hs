@@ -16,26 +16,28 @@ data Tree =
   TreeLabel B.ByteString Tree |
   TreeArray [Tree] deriving (Show)
 
-pullTree :: (Monad m, Nullable r) => r -> StoreT r (Node r) m Tree
+pullTree :: Monad m => Maybe r -> StoreT r (Node r) m Tree
 pullTree ref =
-  if null ref then
-    return Empty
-  else do
+  case ref of
+    Nothing -> return Empty
+    Just ref' -> pullTree' ref'
+ where
+  pullTree' ref = do
     node <- get ref
     case node of
       Branch options -> do
         options' <- mapM (\(c, r) -> do
-          tree <- pullTree r
+          tree <- pullTree' r
           return (c, tree)) options
         return $ TreeBranch options'
       Shortcut h i -> do
-        tree <- pullTree i
+        tree <- pullTree' i
         return $ TreeShortcut h tree
       StringValue st ->
         return $ TreeStringValue st
       Label key ref' -> do
-        tree <- pullTree ref'
+        tree <- pullTree' ref'
         return $ TreeLabel key tree
       Array refs -> do
-        trees <- mapM pullTree refs
+        trees <- mapM pullTree' refs
         return $ TreeArray trees

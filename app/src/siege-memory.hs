@@ -13,7 +13,7 @@ import Database.Siege.Memory
 
 main :: IO ()
 main = do
-  var <- newFVar $ MemoryRef Nothing
+  var <- newFVar Nothing
   _ <- forkIO $ forever $ flushFVar (const $ print "head changed") var
   listenAt 4050 (\sock -> do
     print "new socket [="

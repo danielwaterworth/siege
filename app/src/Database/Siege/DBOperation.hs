@@ -11,6 +11,7 @@ import qualified Data.ByteString as B
 import Control.Monad
 import Control.Monad.Hoist
 import Control.Monad.Trans
+import Control.Monad.Trans.Error as Err
 
 import qualified Data.Enumerator as E
 import Data.Enumerator.Hoist
@@ -29,21 +30,21 @@ data NodeType =
 data DBOperation r a =
   Done a |
 
-  GetType r (Maybe NodeType -> DBOperation r a) |
+  GetType (Maybe r) (Maybe NodeType -> DBOperation r a) |
 
-  CreateValue B.ByteString (r -> DBOperation r a) |
-  GetValue r (Maybe B.ByteString -> DBOperation r a) |
+  CreateValue B.ByteString (Maybe r -> DBOperation r a) |
+  GetValue (Maybe r) (Maybe B.ByteString -> DBOperation r a) |
 
-  MapHas r B.ByteString (Bool -> DBOperation r a) |
-  MapLookup r B.ByteString (r -> DBOperation r a) |
-  MapInsert r B.ByteString r (r -> DBOperation r a) |
-  MapDelete r B.ByteString (r -> DBOperation r a) |
-  forall x. MapItems r (E.Iteratee (B.ByteString, r) (DBOperation r) x) (x -> DBOperation r a) |
+  MapHas (Maybe r) B.ByteString (Bool -> DBOperation r a) |
+  MapLookup (Maybe r) B.ByteString (Maybe r -> DBOperation r a) |
+  MapInsert (Maybe r) B.ByteString (Maybe r) (Maybe r -> DBOperation r a) |
+  MapDelete (Maybe r) B.ByteString (Maybe r -> DBOperation r a) |
+  forall x. MapItems (Maybe r) (E.Iteratee (B.ByteString, r) (DBOperation r) x) (x -> DBOperation r a) |
 
-  SetHas r B.ByteString (Bool -> DBOperation r a) |
-  SetInsert r B.ByteString (r -> DBOperation r a) |
-  SetDelete r B.ByteString (r -> DBOperation r a) |
-  forall x. SetItems r (E.Iteratee B.ByteString (DBOperation r) x) (x -> DBOperation r a)
+  SetHas (Maybe r) B.ByteString (Bool -> DBOperation r a) |
+  SetInsert (Maybe r) B.ByteString (Maybe r -> DBOperation r a) |
+  SetDelete (Maybe r) B.ByteString (Maybe r -> DBOperation r a) |
+  forall x. SetItems (Maybe r) (E.Iteratee B.ByteString (DBOperation r) x) (x -> DBOperation r a)
 
 getType = flip GetType return
 
@@ -83,31 +84,35 @@ instance Monad (DBOperation r) where
       SetDelete r k c -> SetDelete r k (\i -> c i >>= f)
       SetItems r it c -> SetItems r it (\i -> c i >>= f)
 
-convert :: (Monad m, Nullable r) => DBOperation r a -> RawDBOperation r m a
+convert :: Monad m => DBOperation r a -> RawDBOperation r m a
 convert (Done x) = return x
 
 convert (GetType r c) =
-  if null r then
-    convert $ c $ Nothing
-  else do
-    o <- lift $ S.get r
-    case o of
-      (N.StringValue _) -> convert $ c $ Just Value
-      (N.Label l _) ->
-        if l == Map.ident then
-          convert $ c $ Just Map
-        else if l == Set.ident then
-          convert $ c $ Just Set
-        else
-          undefined
-      _ -> undefined
+  case r of
+    Nothing -> (convert . c) Nothing
+    Just ref -> do
+      o <- lift $ S.get ref
+      case o of
+        (N.StringValue _) -> convert $ c $ Just Value
+        (N.Label l _) ->
+          if l == Map.ident then
+            convert $ c $ Just Map
+          else if l == Set.ident then
+            convert $ c $ Just Set
+          else
+            Err.throwError N.TypeError
+        _ -> Err.throwError N.TypeError
 
 convert (CreateValue v c) = do
   o <- N.createValue v
-  convert $ c o
+  (convert . c . Just) o
 convert (GetValue r c) = do
-  o <- N.getValue r
-  convert $ c o
+  case r of
+    Just ref -> do
+      o <- N.getValue ref
+      convert $ c $ Just o
+    Nothing -> do
+      convert $ c Nothing
 
 convert (MapHas r k c) = do
   v <- Map.lookup r k
@@ -116,8 +121,13 @@ convert (MapLookup r k c) = do
   v <- Map.lookup r k
   convert $ c v
 convert (MapInsert r k v c) = do
-  o <- Map.insert r k v
-  convert $ c o
+  case v of
+    Just v' -> do
+      o <- Map.insert r k v'
+      convert $ c $ Just o
+    Nothing -> do
+      o <- Map.delete r k
+      convert $ c o
 convert (MapDelete r k c) = do
   o <- Map.delete r k
   convert $ c o
@@ -130,7 +140,7 @@ convert (SetHas r k c) = do
   convert $ c o
 convert (SetInsert r k c) = do
   o <- Set.insert r k
-  convert $ c o
+  convert $ c $ Just o
 convert (SetDelete r k c) = do
   o <- Set.delete r k
   convert $ c o
