@@ -1,10 +1,5 @@
 module Database.Siege.Memory where
 
-import Prelude hiding (null)
-import Data.Nullable
-
-import Data.Maybe
-
 import Control.Monad.Identity
 import Control.Monad.Trans.Error
 

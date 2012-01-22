@@ -3,9 +3,6 @@
 -- Experimental Disk based backend
 -- Append only to begin with, at some point I'll make it do log structuring
 
-import Prelude hiding (null)
-import Data.Nullable
-
 import Control.Concurrent
 import Control.Monad
 import System.IO

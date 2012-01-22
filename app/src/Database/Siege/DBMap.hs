@@ -1,8 +1,5 @@
 module Database.Siege.DBMap where
 
-import Prelude hiding (null)
-import Data.Nullable
-
 import Control.Monad.Trans.Store
 
 import qualified Data.Enumerator as E
@@ -37,7 +34,7 @@ insert (Just ref) key item = do
   N.createLabel ident ref''
 
 lookup :: Monad m => Maybe r -> B.ByteString -> RawDBOperation r m (Maybe r)
-lookup Nothing key = return Nothing
+lookup Nothing _ = return Nothing
 lookup (Just ref) key = do
   ref' <- N.unlabel ident ref
   ref'' <- T.lookup (Just ref') key

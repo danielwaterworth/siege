@@ -1,8 +1,5 @@
 module Database.Siege.ShowTree where
 
-import Prelude hiding (null)
-import Data.Nullable
-
 import Data.Word
 import qualified Data.ByteString as B
 import Control.Monad.Trans.Store
@@ -22,8 +19,8 @@ pullTree ref =
     Nothing -> return Empty
     Just ref' -> pullTree' ref'
  where
-  pullTree' ref = do
-    node <- get ref
+  pullTree' ref'' = do
+    node <- get ref''
     case node of
       Branch options -> do
         options' <- mapM (\(c, r) -> do

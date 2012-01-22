@@ -1,8 +1,5 @@
 module Database.Siege.DBSet where
 
-import Prelude hiding (null)
-import Data.Nullable
-
 import Control.Monad.Trans.Store
 
 import qualified Data.Enumerator as E
@@ -35,7 +32,7 @@ insert (Just ref) item = do
   createLabel ident ref''
 
 delete :: Monad m => Maybe r -> B.ByteString -> RawDBOperation r m (Maybe r)
-delete Nothing item = return Nothing
+delete Nothing _ = return Nothing
 delete (Just ref) item = do
   ref' <- unlabel ident ref
   ref'' <- T.delete (Just ref') item
@@ -44,7 +41,7 @@ delete (Just ref) item = do
     Nothing -> return Nothing
 
 exists :: Monad m => Maybe r -> B.ByteString -> RawDBOperation r m Bool
-exists Nothing item = return False
+exists Nothing _ = return False
 exists (Just ref) item = do
   ref' <- unlabel ident ref
   ref'' <- T.lookup (Just ref') item

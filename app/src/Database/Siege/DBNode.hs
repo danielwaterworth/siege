@@ -1,8 +1,5 @@
 module Database.Siege.DBNode where
 
-import Prelude hiding (null)
-import Data.Nullable
-
 import Control.Monad.Trans.Store
 
 import Control.Monad.Trans
