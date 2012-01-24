@@ -19,7 +19,7 @@ Flag werror
 Test-Suite siege-test
   build-depends:      base, bytestring, unix, directory, binary, mtl, 
                       transformers, SHA, enumerator, hex, containers, network, 
-                      random, redis, siege, QuickCheck
+                      random, redis, siege, QuickCheck, stm
   hs-source-dirs:     app/testsuite, app/src
   type:               exitcode-stdio-1.0
   main-is:            test.hs
@@ -31,7 +31,7 @@ Executable siege-disk
   hs-source-dirs:     app/src
   build-depends:      base, bytestring, unix, directory, binary, mtl, 
                       transformers, SHA, enumerator, hex, containers, network, 
-                      random
+                      random, stm
   main-is:            siege-disk.hs
   GHC-Options:        -Wall
   if flag(werror)
@@ -41,7 +41,7 @@ Executable siege-memory
   hs-source-dirs:     app/src
   build-depends:      base, bytestring, unix, directory, binary, mtl, 
                       transformers, SHA, enumerator, hex, containers, network, 
-                      random
+                      random, stm
   main-is:            siege-memory.hs
   GHC-Options:        -Wall
   if flag(werror)

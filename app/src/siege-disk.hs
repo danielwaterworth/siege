@@ -3,17 +3,16 @@
 -- Experimental Disk based backend
 -- Append only to begin with, at some point I'll make it do log structuring
 
-import Control.Concurrent
-import Control.Monad
 import System.IO
 
 import Database.Siege.StringHelper
-import Database.Siege.Flushable
-import Database.Siege.NetworkProtocol
-import Database.Siege.NetworkHelper
 
+import Control.Monad
 import Control.Monad.Trans.Store
 
+import Control.Concurrent.MVar
+
+import Database.Siege.EntryPoint
 import Database.Siege.DBNode
 import Database.Siege.DBNodeBinary ()
 
@@ -70,16 +69,13 @@ main =
      else do
       writeFile "head" $ show (Nothing :: Maybe DiskRef)
       return (Nothing :: Maybe DiskRef)
-    var <- newFVar v
-    _ <- forkIO $ forever $ flushFVar (\ref -> do
-      print ("new head", ref)
-      withMVar hnd' hFlush
-        -- TODO: sync to disk, fsync $ handleToFd hnd
-      writeFile "head.new" (show ref)
-      renameFile "head" "head.old"
-      renameFile "head.new" "head"
-      removeFile "head.old"
-      return ()) var
-    listenAt 4050 (\sock -> do
-      print "new socket [="
-      convert protocol sock var (diskStoreTransform' (withMVar hnd'))))
+    let flush ref = do
+          print ("new head", ref)
+          withMVar hnd' hFlush
+            -- TODO: sync to disk, fsync $ handleToFd hnd
+          writeFile "head.new" (show ref)
+          renameFile "head" "head.old"
+          renameFile "head.new" "head"
+          removeFile "head.old"
+          return ()
+    start 4050 v flush (diskStoreTransform' (withMVar hnd')))
