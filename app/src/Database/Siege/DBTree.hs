@@ -7,27 +7,21 @@ import Prelude hiding (null, lookup)
 import Data.Nullable
 
 import Data.Word
-import Data.Maybe
 import qualified Data.ByteString as B
 import Data.List hiding (null, lookup, delete, insert)
 import qualified Data.Enumerator as E
-
-import qualified Data.Set as S
-import qualified Data.Map as M
 
 import Control.Monad
 import Control.Monad.Error
 
 import Control.Monad.Trans.Store
 
-import Database.Siege.DBNode (Ref, Node(..), RawDBOperation, DBError(..))
-import qualified Database.Siege.DBNode as N
-
+import Database.Siege.DBNode
 import Database.Siege.Hash
 
 lookup :: Monad m => Maybe r -> B.ByteString -> RawDBOperation r m (Maybe r)
-lookup ref h =
-  case ref of
+lookup r h =
+  case r of
     Just ref' -> lookup' ref' (B.unpack $ stHash h)
     Nothing -> return Nothing
  where
