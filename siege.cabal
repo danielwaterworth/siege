@@ -8,7 +8,7 @@ Maintainer:           Da.Waterworth@gmail.com
 Category:             Database
 Build-type:           Simple
 Extra-source-files:   README.md
-Cabal-version:        >= 1.8
+Cabal-version:        >= 1.10
 
 Flag buildDistributed
   description:        Build the distributed backend 
@@ -20,6 +20,7 @@ Flag werror
 
 Library
   hs-source-dirs:     app/src
+
   build-depends:      base         >= 4 && < 5
                     , bytestring   >= 0.9 && < 0.10
                     , unix         >= 2.5 && < 2.6
@@ -64,6 +65,8 @@ Library
                       Database.Siege.ShowTree
                       Database.Siege.StringHelper
 
+  default-language:   Haskell2010
+
   GHC-Options:        -Wall
   if flag(werror)
     GHC-Options:      -Werror
@@ -76,16 +79,17 @@ Library
     exposed-modules:  Database.Zookeeper.Core
     C-Sources:        app/src/Database/Zookeeper/consts.c
 
---Test-Suite siege-test
---  build-depends:      base, bytestring, unix, directory, binary, mtl, 
---                      transformers, SHA, enumerator, hex, containers, network, 
---                      random, redis, siege, QuickCheck, stm
---  hs-source-dirs:     app/testsuite, app/src
---  type:               exitcode-stdio-1.0
---  main-is:            test.hs
---  GHC-Options:        -Wall
---  if flag(werror)
---    GHC-Options:      -Werror
+Test-Suite siege-test
+  type:               exitcode-stdio-1.0
+  hs-source-dirs:     app/testsuite
+  main-is:            test.hs
+  default-language:   Haskell2010
+  build-depends:      base, bytestring, unix, directory, binary, mtl, 
+                      transformers, SHA, enumerator, hex, containers, network, 
+                      random, redis, siege, QuickCheck, stm,
+                      siege
+
+  GHC-Options:        -Wall
 
 Executable siege-disk
   hs-source-dirs:     app/src
@@ -102,6 +106,7 @@ Executable siege-disk
                     , hex          >= 0.1 && < 0.2
                     , SHA          >= 1.5 && < 1.6
                     , siege
+  default-language:   Haskell2010
   GHC-Options:        -Wall
   if flag(werror)
     GHC-Options:      -Werror
