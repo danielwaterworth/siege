@@ -2,9 +2,7 @@ module Database.Siege.DBNode where
 
 import Control.Monad.Trans.Store
 
-import Control.Monad.Trans
-import Control.Monad.Trans.Error
---import Data.Int
+import Control.Monad.Error
 import Data.Word
 import qualified Data.ByteString as B
 

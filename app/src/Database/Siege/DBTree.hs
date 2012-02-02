@@ -16,8 +16,7 @@ import qualified Data.Set as S
 import qualified Data.Map as M
 
 import Control.Monad
-import Control.Monad.Trans
-import Control.Monad.Trans.Error
+import Control.Monad.Error
 
 import Control.Monad.Trans.Store
 

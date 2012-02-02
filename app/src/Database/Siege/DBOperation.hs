@@ -10,8 +10,7 @@ import qualified Data.ByteString as B
 
 import Control.Monad
 import Control.Monad.Hoist
-import Control.Monad.Trans
-import Control.Monad.Trans.Error as Err
+import Control.Monad.Error
 
 import qualified Data.Enumerator as E
 import Data.Enumerator.Hoist
@@ -100,8 +99,9 @@ convert (GetType r c) =
           else if l == Set.ident then
             convert $ c $ Just Set
           else
-            Err.throwError N.TypeError
-        _ -> Err.throwError N.TypeError
+            throwError N.TypeError
+        _ ->
+          throwError N.TypeError
 
 convert (CreateValue v c) = do
   o <- N.createValue v

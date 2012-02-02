@@ -10,8 +10,6 @@ Build-type:           Simple
 Extra-source-files:   README.md
 Cabal-version:        >= 1.8
 
--- TODO: put the bulk of the files in a library that is reused
-
 Flag buildDistributed
   description:        Build the distributed backend 
   default:            False
@@ -67,7 +65,6 @@ Library
                       Database.Siege.StringHelper
 
   GHC-Options:        -Wall
-
   if flag(werror)
     GHC-Options:      -Werror
 
@@ -119,16 +116,15 @@ Executable siege-disk
 --  if flag(werror)
 --    GHC-Options:      -Werror
 
-Executable siege-distributed
-  if flag(buildDistributed)
-    build-depends:    base, bytestring, unix, directory, binary, mtl, 
-                      transformers, SHA, enumerator, hex, containers, network, 
-                      random, redis, siege
-    hs-source-dirs:   app/src
-  else
-    Buildable:        False
-  main-is:            siege-distributed.hs
-  GHC-Options:        -Wall
-  if flag(werror)
-    GHC-Options:      -Werror
-
+--Executable siege-distributed
+--  if flag(buildDistributed)
+--    build-depends:    base, bytestring, unix, directory, binary, mtl, 
+--                      transformers, SHA, enumerator, hex, containers, network, 
+--                      random, redis, siege
+--    hs-source-dirs:   app/src
+--  else
+--    Buildable:        False
+--  main-is:            siege-distributed.hs
+--  GHC-Options:        -Wall
+--  if flag(werror)
+--    GHC-Options:      -Werror

@@ -4,26 +4,19 @@
 module Database.Siege.NetworkProtocol where
 
 import Prelude hiding (null)
-import Data.Nullable
 
-import Data.Maybe
 import Data.Char
 import qualified Data.ByteString as B
-import qualified Data.Enumerator as E
-import Data.Map (Map)
 import qualified Data.Map as Map
 import Control.Monad
 import Control.Monad.Identity
 import Control.Monad.Hoist
-import Control.Monad.Trans
-import Control.Monad.Trans.Error
-import Control.Monad.Trans.Maybe
-import Control.Monad.Trans.State as State
+import Control.Monad.Error
+import Control.Monad.State as State
 
 import Database.Siege.Connection as C
 import Database.Siege.SharedState as Sh
-import Control.Monad.Trans.Store (StoreT(..), cache)
-import qualified Control.Monad.Trans.Store as St
+import Control.Monad.Trans.Store (StoreT(..))
 import qualified Database.Siege.Recv as R
 import Database.Siege.DBNode (Ref, Node, DBError)
 import qualified Database.Siege.DBNode as N

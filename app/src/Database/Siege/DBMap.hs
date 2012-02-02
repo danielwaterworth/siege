@@ -6,8 +6,8 @@ import qualified Data.Enumerator as E
 import qualified Data.Enumerator.List as EL
 
 import Control.Monad
+import Control.Monad.Error
 import Control.Monad.Trans
-import Control.Monad.Trans.Error
 import Control.Monad.Trans.Maybe
 
 import Data.Maybe
