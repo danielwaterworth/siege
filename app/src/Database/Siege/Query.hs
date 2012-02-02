@@ -1,3 +1,4 @@
+module Database.Siege.Query where
 
 import Data.Char
 import Data.List
@@ -18,7 +19,7 @@ generate (Atom var) =
   else
     var
 
-main = print $ generate $ List [Atom "lambda", List [Atom "a"], Atom "a"]
+-- main = print $ generate $ List [Atom "lambda", List [Atom "a"], Atom "a"]
 
 data PreConditions =
   Type |

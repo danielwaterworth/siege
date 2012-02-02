@@ -1,10 +1,10 @@
-module DBList where
+module Database.Siege.DBList where
 
-import Store
-import DBNode as N
+import Database.Siege.DBNode as N
 import Control.Monad
 import Control.Monad.Trans
 import Control.Monad.Trans.Maybe
+import Control.Monad.Trans.Store
 
 head :: Monad m => Ref -> MaybeT (StoreT Ref Node m) Ref
 head ref = do
@@ -30,9 +30,10 @@ length ref = do
   length' ref'
  where
   length' ref = do
-    if N.null ref then
+    if N.null ref
+      then
       return 0
-    else do
+      else do
       ref' <- DBList.tail ref
       l <- DBList.length ref'
       return $ 1 + l
@@ -45,9 +46,10 @@ append a b = do
   lift $ createLabel "List" ref
  where
   append' a b = do
-    if N.null a then
+    if N.null a
+      then
       return b
-    else do
+      else do
       h <- DBList.head a
       t <- DBList.tail a
       ref <- append' t b

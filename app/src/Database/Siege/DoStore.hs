@@ -9,7 +9,7 @@ import Data.Char
 import qualified Data.ByteString as B
 import qualified Data.ByteString.Lazy as L
 import qualified Control.Monad.Trans.Store as S
-import qualified Database.Redis.Redis as R
+-- import qualified Database.Redis.Redis as R
 import Database.Siege.Hash
 import qualified Database.Siege.DBNode as N
 import Database.Siege.DBNodeBinary
