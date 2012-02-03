@@ -30,7 +30,6 @@ Library
                     , transformers >= 0.2 && < 0.3
                     , SHA          >= 1.5 && < 1.6
                     , enumerator   >= 0.4.14 && < 0.5
-                    , hex          >= 0.1 && < 0.2
                     , containers   >= 0.4 && < 0.5
                     , network      >= 2.3 && < 2.4
                     , random       >= 1.0 && < 1.1
@@ -103,7 +102,6 @@ Executable siege-disk
                     , network      >= 2.3 && < 2.4
                     , enumerator   >= 0.4.14 && < 0.5
                     , binary       >= 0.5 && < 0.6
-                    , hex          >= 0.1 && < 0.2
                     , SHA          >= 1.5 && < 1.6
                     , siege
   default-language:   Haskell2010
