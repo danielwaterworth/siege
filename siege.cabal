@@ -42,7 +42,7 @@ Library
                       Database.Siege.Commands
                       Database.Siege.Connection
                       Database.Siege.DBDequeue
-                      -- Database.Siege.DBList
+                      Database.Siege.DBList
                       Database.Siege.DBMap
                       Database.Siege.DBNodeBinary
                       Database.Siege.DBNode
@@ -123,6 +123,9 @@ Executable siege-memory
     GHC-Options:      -Werror
 
 Executable siege-distributed
+  if !flag(buildDistributed)
+    buildable:        False
+
   hs-source-dirs:     exec
   main-is:            siege-distributed.hs
 
@@ -136,6 +139,3 @@ Executable siege-distributed
   GHC-Options:        -Wall
   if flag(werror)
     GHC-Options:      -Werror
-
-  if !flag(buildDistributed)
-    buildable:        False
