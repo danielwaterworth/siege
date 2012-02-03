@@ -21,17 +21,17 @@ Flag werror
 Library
   hs-source-dirs:     app/src
 
-  build-depends:      base         >= 4 && < 5
-                    , bytestring   >= 0.9 && < 0.10
-                    , directory    >= 1.1 && < 1.2
-                    , binary       >= 0.5 && < 0.6
-                    , mtl          >= 2.0 && < 2.1
-                    , transformers >= 0.2 && < 0.3
-                    , SHA          >= 1.5 && < 1.6
+  build-depends:      base         == 4.*
+                    , bytestring   == 0.9.*
+                    , directory    == 1.1.*
+                    , binary       == 0.5.*
+                    , mtl          == 2.0.*
+                    , transformers == 0.2.*
+                    , SHA          == 1.5.*
                     , enumerator   >= 0.4.14 && < 0.5
-                    , containers   >= 0.4 && < 0.5
-                    , network      >= 2.3 && < 2.4
-                    , random       >= 1.0 && < 1.1
+                    , containers   == 0.4.*
+                    , network      == 2.3.*
+                    , random       == 1.0.*
 
   exposed-modules:    Control.Monad.Hoist
                       Control.Monad.Trans.Store
@@ -82,27 +82,26 @@ Test-Suite siege-test
   hs-source-dirs:     app/testsuite
   main-is:            test.hs
   default-language:   Haskell2010
-  build-depends:      base, bytestring, unix, directory, binary, mtl, 
-                      transformers, SHA, enumerator, hex, containers, network, 
-                      random, redis, siege, QuickCheck, stm,
-                      siege
+
+  build-depends:      base         == 4.*
+                    , bytestring   == 0.9.*
+                    , QuickCheck   == 2.4.*
+                    , siege
 
   GHC-Options:        -Wall
+  if flag(werror)
+    GHC-Options:      -Werror
 
 Executable siege-disk
-  hs-source-dirs:     app/src
+  hs-source-dirs:     exec
   main-is:            siege-disk.hs
-  build-depends:      base         >= 4 && < 5
-                    , bytestring   >= 0.9 && < 0.10
-                    , mtl          >= 2.0 && < 2.1
-                    , transformers >= 0.2 && < 0.3
-                    , containers   >= 0.4 && < 0.5
-                    , directory    >= 1.1 && < 1.2
-                    , network      >= 2.3 && < 2.4
-                    , enumerator   >= 0.4.14 && < 0.5
-                    , binary       >= 0.5 && < 0.6
-                    , SHA          >= 1.5 && < 1.6
+
+  build-depends:      base         == 4.*
+                    , bytestring   == 0.9.*
+                    , directory    == 1.1.*
+                    , binary       == 0.5.*
                     , siege
+
   default-language:   Haskell2010
   GHC-Options:        -Wall
   if flag(werror)
