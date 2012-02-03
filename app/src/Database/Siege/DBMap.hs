@@ -5,12 +5,9 @@ import Control.Monad.Trans.Store
 import qualified Data.Enumerator as E
 import qualified Data.Enumerator.List as EL
 
-import Control.Monad
 import Control.Monad.Error
-import Control.Monad.Trans
 import Control.Monad.Trans.Maybe
 
-import Data.Maybe
 import qualified Data.ByteString as B
 
 import Database.Siege.DBNode (Node(..), RawDBOperation, DBError(..))
