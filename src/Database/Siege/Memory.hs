@@ -1,7 +1,7 @@
 module Database.Siege.Memory where
 
 import Control.Monad.Identity
-import Control.Monad.Trans.Error
+import Control.Monad.Error
 
 import Control.Monad.Trans.Store
 import Database.Siege.DBNode (Node, RawDBOperation)

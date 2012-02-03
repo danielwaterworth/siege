@@ -41,15 +41,17 @@ lookup ref key = do
   let key' = stToB $ show key
   let h = stHash key'
   ref'' <- T.lookup ref' h
-  if null ref'' then
+  if null ref''
+    then
     return empty
-  else do
+    else do
     node <- lift $ get ref''
     case node of
       Label key'' ref''' ->
-        if key' == key'' then
+        if key' == key''
+          then
           return ref'''
-        else
+          else
           (error . show) ("wooh, key collision ", key, key')
       _ ->
         (error . show) ("this shouldn't be here")
@@ -60,9 +62,10 @@ delete ref key = do
   let key' = stToB $ show key
   let h = stHash key'
   ref'' <- T.delete ref' h
-  if null ref'' then
+  if null ref''
+    then
     return empty
-  else
+    else
     N.createLabel ident ref''
 
 iterate :: (Monad m, Nullable r) => r -> E.Enumerator (Int64, r) (RawDBOperation r m) a

@@ -9,8 +9,7 @@ import Data.Maybe
 import qualified Data.ByteString as B
 
 import Control.Monad
-import Control.Monad.Trans
-import Control.Monad.Trans.Error
+import Control.Monad.Error
 
 import Database.Siege.DBNode as N
 import Database.Siege.DBTree as T

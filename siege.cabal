@@ -8,71 +8,134 @@ Maintainer:           Da.Waterworth@gmail.com
 Category:             Database
 Build-type:           Simple
 Extra-source-files:   README.md
-Cabal-version:        >=1.8
-
--- TODO: put the bulk of the files in a library that is reused
-
-Flag werror
-  description:        Make warnings errors
-  default:            False
-
-Test-Suite siege-test
-  build-depends:      base, bytestring, unix, directory, binary, mtl, 
-                      transformers, SHA, enumerator, hex, containers, network, 
-                      random, redis, siege, QuickCheck
-  hs-source-dirs:     app/testsuite, app/src
-  type:               exitcode-stdio-1.0
-  main-is:            test.hs
-  GHC-Options:        -Wall
-  if flag(werror)
-    GHC-Options:      -Werror
-
-Executable siege-disk
-  hs-source-dirs:     app/src
-  build-depends:      base, bytestring, unix, directory, binary, mtl, 
-                      transformers, SHA, enumerator, hex, containers, network, 
-                      random
-  main-is:            siege-disk.hs
-  GHC-Options:        -Wall
-  if flag(werror)
-    GHC-Options:      -Werror
-
-Executable siege-memory
-  hs-source-dirs:     app/src
-  build-depends:      base, bytestring, unix, directory, binary, mtl, 
-                      transformers, SHA, enumerator, hex, containers, network, 
-                      random
-  main-is:            siege-memory.hs
-  GHC-Options:        -Wall
-  if flag(werror)
-    GHC-Options:      -Werror
+Cabal-version:        >= 1.10
 
 Flag buildDistributed
   description:        Build the distributed backend 
   default:            False
 
-Library
-  if flag(buildDistributed)
-    include-dirs:     /usr/include/zookeeper, app/src/Database/Zookeeper
-    extra-libraries:  zookeeper_mt
-    build-tools:      hsc2hs
-    build-depends:    base >= 3 && < 5, unix, filepath
-    exposed-modules:  Database.Zookeeper.Core
-    C-Sources:        app/src/Database/Zookeeper/consts.c
-    hs-source-dirs:   app/src
-  else
-    buildable:        False
+Flag werror
+  description:        Make warnings errors
+  default:            False
 
-Executable siege-distributed
-  if flag(buildDistributed)
-    build-depends:    base, bytestring, unix, directory, binary, mtl, 
-                      transformers, SHA, enumerator, hex, containers, network, 
-                      random, redis, siege
-    hs-source-dirs:   app/src
-  else
-    Buildable:        False
-  main-is:            siege-distributed.hs
+Library
+  hs-source-dirs:     src
+
+  build-depends:      base         == 4.*
+                    , bytestring   == 0.9.*
+                    , directory    == 1.1.*
+                    , binary       == 0.5.*
+                    , mtl          == 2.0.*
+                    , transformers == 0.2.*
+                    , SHA          == 1.5.*
+                    , enumerator   >= 0.4.14 && < 0.5
+                    , containers   == 0.4.*
+                    , network      == 2.3.*
+                    , random       == 1.0.*
+
+  exposed-modules:    Control.Monad.Hoist
+                      Control.Monad.Trans.Store
+
+                      Data.Enumerator.Hoist
+                      Data.Nullable
+
+                      Database.Siege.Commands
+                      Database.Siege.Connection
+                      Database.Siege.DBDequeue
+                      Database.Siege.DBList
+                      Database.Siege.DBMap
+                      Database.Siege.DBNodeBinary
+                      Database.Siege.DBNode
+                      Database.Siege.DBOperation
+                      Database.Siege.DBSequence
+                      Database.Siege.DBSet
+                      Database.Siege.DBTree
+                      -- Database.Siege.DBVector
+                      -- Database.Siege.DoStore
+                      Database.Siege.Flushable
+                      Database.Siege.Hash
+                      Database.Siege.Memory
+                      Database.Siege.NetworkHelper
+                      Database.Siege.NetworkProtocol
+                      -- Database.Siege.Query
+                      Database.Siege.Recv
+                      Database.Siege.SharedState
+                      Database.Siege.ShowTree
+                      Database.Siege.StringHelper
+
+  default-language:   Haskell2010
+
   GHC-Options:        -Wall
   if flag(werror)
     GHC-Options:      -Werror
 
+  if flag(buildDistributed)
+    include-dirs:     /usr/include/zookeeper, app/src/Database/Zookeeper
+    extra-libraries:  zookeeper_mt
+    build-tools:      hsc2hs
+    build-depends:    base == 4.*
+    exposed-modules:  Database.Zookeeper.Core
+    C-Sources:        app/src/Database/Zookeeper/consts.c
+
+Test-Suite siege-test
+  type:               exitcode-stdio-1.0
+  hs-source-dirs:     testsuite
+  main-is:            test.hs
+  default-language:   Haskell2010
+
+  build-depends:      base         == 4.*
+                    , bytestring   == 0.9.*
+                    , QuickCheck   == 2.4.*
+                    , siege
+
+  GHC-Options:        -Wall
+  if flag(werror)
+    GHC-Options:      -Werror
+
+Executable siege-disk
+  hs-source-dirs:     exec
+  main-is:            siege-disk.hs
+
+  build-depends:      base         == 4.*
+                    , bytestring   == 0.9.*
+                    , directory    == 1.1.*
+                    , binary       == 0.5.*
+                    , siege
+
+  default-language:   Haskell2010
+  GHC-Options:        -Wall
+  if flag(werror)
+    GHC-Options:      -Werror
+
+Executable siege-memory
+  hs-source-dirs:     exec
+  main-is:            siege-memory.hs
+
+  build-depends:      base         == 4.*
+                    , bytestring   == 0.9.*
+                    , directory    == 1.1.*
+                    , binary       == 0.5.*
+                    , siege
+
+  default-language:   Haskell2010
+  GHC-Options:        -Wall
+  if flag(werror)
+    GHC-Options:      -Werror
+
+Executable siege-distributed
+  if !flag(buildDistributed)
+    buildable:        False
+
+  hs-source-dirs:     exec
+  main-is:            siege-distributed.hs
+
+  build-depends:      base         == 4.*
+                    , bytestring   == 0.9.*
+                    , directory    == 1.1.*
+                    , binary       == 0.5.*
+                    , siege
+
+  default-language:   Haskell2010
+  GHC-Options:        -Wall
+  if flag(werror)
+    GHC-Options:      -Werror

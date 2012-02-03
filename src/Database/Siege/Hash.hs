@@ -3,7 +3,6 @@ module Database.Siege.Hash where
 import qualified Data.ByteString as B
 import qualified Data.ByteString.Lazy as L
 import Data.Digest.Pure.SHA
-import Data.Hex
 import Data.Char
 
 hash :: L.ByteString -> L.ByteString
@@ -20,6 +19,3 @@ strToLB = L.pack . (map (fromIntegral . ord))
 
 strHash :: String -> String
 strHash = lbToStr . hash . strToLB
-
-hexStrHash :: String -> String
-hexStrHash = hex . strHash

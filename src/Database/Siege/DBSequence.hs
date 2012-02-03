@@ -1,4 +1,8 @@
-module DBSequence where
+module Database.Siege.DBSequence where
+
+import qualified Data.Enumerator as E
+import Data.Word
+import Database.Siege.DBNode
 
 -- a Monoid tree using Sum
 

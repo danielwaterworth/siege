@@ -1,24 +1,26 @@
-module DBList where
+module Database.Siege.DBList where
 
-import Store
-import DBNode as N
+{-
+import Data.Nullable as N
+import Database.Siege.DBNode as N
 import Control.Monad
 import Control.Monad.Trans
 import Control.Monad.Trans.Maybe
+import Control.Monad.Trans.Store
 
 head :: Monad m => Ref -> MaybeT (StoreT Ref Node m) Ref
 head ref = do
   node <- lift $ get ref
   case node of
     Array [h, _] -> return h
-    _ -> nothing
+    _ -> empty
 
 tail :: Monad m => Ref -> MaybeT (StoreT Ref Node m) Ref
 tail ref = do
   node <- lift $ get ref
   case node of
     Array [_, t] -> return t
-    _ -> nothing
+    _ -> empty
 
 cons :: Monad m => Ref -> Ref -> StoreT Ref Node m Ref
 cons a b =
@@ -30,11 +32,12 @@ length ref = do
   length' ref'
  where
   length' ref = do
-    if N.null ref then
+    if N.null ref
+      then
       return 0
-    else do
-      ref' <- DBList.tail ref
-      l <- DBList.length ref'
+      else do
+      ref' <- Database.Siege.DBList.tail ref
+      l <- Database.Siege.DBList.length ref'
       return $ 1 + l
 
 append :: Monad m => Ref -> Ref -> MaybeT (StoreT Ref Node m) Ref
@@ -45,11 +48,12 @@ append a b = do
   lift $ createLabel "List" ref
  where
   append' a b = do
-    if N.null a then
+    if N.null a
+      then
       return b
-    else do
-      h <- DBList.head a
-      t <- DBList.tail a
+      else do
+      h <- Database.Siege.DBList.head a
+      t <- Database.Siege.DBList.tail a
       ref <- append' t b
       lift $ cons h ref
 
@@ -62,3 +66,4 @@ create items = do
   create' (x:xs) = do
     ref <- create' xs
     cons x ref
+-}

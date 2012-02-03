@@ -22,7 +22,7 @@ modifyFVar op (FVar m i b) = do
   (v', after, out) <- op v
   atomicModifyIORef i (\(_, c, act) -> ((v', c, act >> after), ()))
   putMVar m v'
-  tryPutMVar b ()
+  _ <- tryPutMVar b ()
   return out
 
 readFVar :: FVar s -> IO s
@@ -31,10 +31,10 @@ readFVar (FVar _ i _) = do
   return v
 
 flushFVar :: (s -> IO a) -> FVar s -> IO a
-flushFVar op (FVar m i b) = do
+flushFVar op (FVar _ i b) = do
   takeMVar b
   (v, act) <- atomicModifyIORef i (\(v, c, act) -> ((v, c, return ()), (v, act)))
   out <- op v
-  atomicModifyIORef i (\(v', c, act) -> ((v', v, act), ()))
+  atomicModifyIORef i (\(v', _, act') -> ((v', v, act'), ()))
   act
   return out

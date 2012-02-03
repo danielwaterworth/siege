@@ -6,8 +6,7 @@ import Prelude hiding (null)
 import Data.Nullable
 
 import qualified Data.ByteString as B
-import Control.Monad.Trans
-import Control.Monad.Trans.State
+import Control.Monad.State
 import qualified Data.Enumerator as E
 
 import Database.Siege.Connection
