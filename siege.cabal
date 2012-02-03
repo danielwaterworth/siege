@@ -19,7 +19,7 @@ Flag werror
   default:            False
 
 Library
-  hs-source-dirs:     app/src
+  hs-source-dirs:     src
 
   build-depends:      base         == 4.*
                     , bytestring   == 0.9.*
@@ -79,7 +79,7 @@ Library
 
 Test-Suite siege-test
   type:               exitcode-stdio-1.0
-  hs-source-dirs:     app/testsuite
+  hs-source-dirs:     testsuite
   main-is:            test.hs
   default-language:   Haskell2010
 
